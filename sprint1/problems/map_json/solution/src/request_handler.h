@@ -38,7 +38,7 @@ public:
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
-        std::cout << "RequestHandler::operator() process req" << std::endl;
+        //std::cout << "RequestHandler::operator() process req" << std::endl;
         send(HandleRequest(std::forward<decltype(req)>(req)));
     }
 

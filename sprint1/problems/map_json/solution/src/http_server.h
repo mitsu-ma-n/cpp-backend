@@ -35,16 +35,16 @@ protected:
     // Запрещаем копирование и присваивание объектов SessionBase и его наследников
     SessionBase(const SessionBase&) = delete;
     SessionBase& operator=(const SessionBase&) = delete;
-//    ~SessionBase() = default;
-    ~SessionBase() {
-        std::cout << "~SessionBase()" << std::endl;
-    }
+    ~SessionBase() = default;
+//    ~SessionBase() {
+//        std::cout << "~SessionBase()" << std::endl;
+//    }
     // Явный конструктор, чтобы предотвратить неявное приведение типов при вызове
     explicit SessionBase(tcp::socket&& socket);
     // Шаблонная функция записи ответа. Body и Fields являются параметрами шаблона http::response
     template <typename Body, typename Fields>
     void Write(http::response<Body, Fields>&& response) {
-        std::cout << "SessionBase::Write" << std::endl;
+        //std::cout << "SessionBase::Write" << std::endl;
         // Запись выполняется асинхронно, поэтому response перемещаем в область кучи
         auto safe_response = std::make_shared<http::response<Body, Fields>>(std::move(response));
 
@@ -86,24 +86,24 @@ public:
     Session(tcp::socket&& socket, Handler&& request_handler)
         : SessionBase(std::move(socket))
         , request_handler_(std::forward<Handler>(request_handler)) {
-        std::cout << "Session created" << std::endl;
+        //std::cout << "Session created" << std::endl;
     }
 
 private:
     void HandleRequest(HttpRequest&& request) override {
-        std::cout << "Session::HandleRequest" << std::endl;
+        //std::cout << "Session::HandleRequest" << std::endl;
         // Захватываем умный указатель на текущий объект Session в лямбде,
         // чтобы продлить время жизни сессии до вызова лямбды.
         // Используется generic-лямбда функция, способная принять response произвольного типа
         request_handler_(std::move(request), [self = this->shared_from_this()](auto&& response) {
-            std::cout << "lambada call, that defined in request_handler_ in Session::HandleRequest" << std::endl;
+            //std::cout << "lambada call, that defined in request_handler_ in Session::HandleRequest" << std::endl;
             self->Write(std::move(response));
         });
     }
 
     // Отдельная функция для получения шаред указателя на себя самого
     std::shared_ptr<SessionBase> GetSharedThis() override {
-        std::cout << "Session::GetSharedThis" << std::endl;
+        //std::cout << "Session::GetSharedThis" << std::endl;
         return this->shared_from_this();
     }    
 
@@ -133,17 +133,17 @@ public:
         // Переводим acceptor в состояние, в котором он способен принимать новые соединения
         // Благодаря этому новые подключения будут помещаться в очередь ожидающих соединений
         acceptor_.listen(net::socket_base::max_listen_connections);
-        std::cout << "Listener created. Whait request" << std::endl;
+        //std::cout << "Listener created. Whait request" << std::endl;
     }
 
     void Run() {
-        std::cout << "Listener::Run" << std::endl;
+        //std::cout << "Listener::Run" << std::endl;
         DoAccept();
     }
 
 private:
     void DoAccept() {
-        std::cout << "Listener::DoAccept" << std::endl;
+        //std::cout << "Listener::DoAccept" << std::endl;
         acceptor_.async_accept(
             // Передаём последовательный исполнитель, в котором будут вызываться обработчики
             // асинхронных операций сокета
@@ -161,7 +161,7 @@ private:
 
     // Метод socket::async_accept создаст сокет и передаст его в OnAccept
     void OnAccept(sys::error_code ec, tcp::socket socket) {
-        std::cout << "Listener::OnAccept" << std::endl;
+        //std::cout << "Listener::OnAccept" << std::endl;
         using namespace std::literals;
 
         if (ec) {
@@ -177,7 +177,7 @@ private:
 
     // Асинхронно обрабатывает сессию
     void AsyncRunSession(tcp::socket&& socket) {
-        std::cout << "Listener::AsyncRunSession" << std::endl;
+        //std::cout << "Listener::AsyncRunSession" << std::endl;
         // Создаём шаред указатель на сессию. Ссесия создаётся через конструктор и по указателю
         // вызывается метод Run()
         std::make_shared<Session<RequestHandler>>(std::move(socket), request_handler_)->Run();
@@ -192,7 +192,7 @@ private:
 // Функция запуска сервера
 template <typename RequestHandler>
 void ServeHttp(net::io_context& ioc, const tcp::endpoint& endpoint, RequestHandler&& handler) {
-    std::cout << "ServeHttp" << std::endl;
+    //std::cout << "ServeHttp" << std::endl;
     // При помощи decay_t исключим ссылки из типа RequestHandler,
     // чтобы Listener хранил RequestHandler по значению
     using MyListener = Listener<std::decay_t<RequestHandler>>;

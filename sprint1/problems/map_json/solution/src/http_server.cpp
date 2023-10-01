@@ -11,7 +11,7 @@ void ReportError(beast::error_code ec, std::string_view what) {
 
 // 
 void SessionBase::Run() {
-    std::cout << "SessionBase::Run" << std::endl;
+    //std::cout << "SessionBase::Run" << std::endl;
     // Вызываем метод Read, используя executor объекта stream_.
     // Таким образом вся работа со stream_ будет выполняться, используя его executor
     net::dispatch(stream_.get_executor(),
@@ -21,12 +21,12 @@ void SessionBase::Run() {
 // Явный конструктор, чтобы предотвратить неявное приведение типов при вызове
 SessionBase::SessionBase(tcp::socket&& socket)
     : stream_(std::move(socket)) {
-    std::cout << "SessionBase created" << std::endl;
+    //std::cout << "SessionBase created" << std::endl;
 }
 
 // Основной метод чтения запроса
 void SessionBase::Read() {
-    std::cout << "SessionBase::Read" << std::endl;
+    //std::cout << "SessionBase::Read" << std::endl;
     using namespace std::literals;
     // Очищаем запрос от прежнего значения (метод Read может быть вызван несколько раз)
     request_ = {};
@@ -38,7 +38,7 @@ void SessionBase::Read() {
 }
 
 void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t bytes_read) {
-    std::cout << "SessionBase::OnRead" << std::endl;
+    //std::cout << "SessionBase::OnRead" << std::endl;
     using namespace std::literals;
     if (ec == http::error::end_of_stream) {
         // Нормальная ситуация - клиент закрыл соединение. Мы тоже закрываем
@@ -52,13 +52,13 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
 
 // Закрытие соединения потока stream_
 void SessionBase::Close() {
-    std::cout << "SessionBase::Close" << std::endl;
+    //std::cout << "SessionBase::Close" << std::endl;
     beast::error_code ec;
     stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
 }
 
 void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
-    std::cout << "SessionBase::OnWrite" << std::endl;
+    //std::cout << "SessionBase::OnWrite" << std::endl;
     if (ec) {
         return ReportError(ec, "write"sv);
     }

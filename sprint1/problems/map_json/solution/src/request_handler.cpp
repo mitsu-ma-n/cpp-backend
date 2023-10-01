@@ -20,8 +20,8 @@ StringResponse RequestHandler::MakeStringResponse(http::status status, std::stri
 }
 
 StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
-    std::string req_view(req.method_string());
-    std::cout << "RequestHandler::HandleRequest" << req_view << std::endl;
+    //std::string req_view(req.method_string());
+    //std::cout << "RequestHandler::HandleRequest" << req_view << std::endl;
     const auto text_response = [&req,this](http::status status, std::string_view text, size_t size) {
         return this->MakeStringResponse(status, text, size, req.version(), req.keep_alive());
     };

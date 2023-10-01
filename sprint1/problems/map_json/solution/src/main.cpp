@@ -12,6 +12,7 @@ using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
 
+/*
 // del
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -21,11 +22,12 @@ using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
 // del
+*/
 
 using namespace std::literals;
 
 namespace {
-
+/*
 // del
 // Создаёт StringResponse с заданными параметрами
 StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
@@ -64,7 +66,7 @@ StringResponse HandleRequest(StringRequest&& req) {
     }
 }
 // del
-
+*/
 
 
 // Запускает функцию fn на n потоках, включая текущий
@@ -92,8 +94,8 @@ int main(int argc, const char* argv[]) {
         model::Game game = json_loader::LoadGame(argv[1]);
 
         // 2. Инициализируем io_context
-//        const unsigned num_threads = std::thread::hardware_concurrency();
-        const unsigned num_threads = 1u;
+        const unsigned num_threads = std::thread::hardware_concurrency();
+//        const unsigned num_threads = 1u;  // Для отладки в одном потоке
         net::io_context ioc(num_threads);
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
@@ -112,16 +114,16 @@ int main(int argc, const char* argv[]) {
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-/*
         http_server::ServeHttp(ioc, {address, port}, [&handler](auto&& req, auto&& send) {
-            std::cout << "lambada call, that defined in ServeHttp in main" << std::endl;
+            //std::cout << "lambada call, that defined in ServeHttp in main" << std::endl;
             handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
-*/
+/*
     http_server::ServeHttp(ioc, {address, port}, [](auto&& req, auto&& sender) {
             std::cout << "lambada call, that defined in ServeHttp in main" << std::endl;
             sender(HandleRequest(std::forward<decltype(req)>(req)));
     });
+*/
 
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         std::cout << "Server has started..."sv << std::endl;
