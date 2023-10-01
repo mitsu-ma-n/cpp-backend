@@ -86,7 +86,7 @@ int main() {
         if (!ec) {
             ioc.stop();
         }
-        //std::cout << "Server has been finished..."sv << std::endl;
+        std::cout << "Server has been finished..."sv << std::endl;
     });
 
     const auto address = net::ip::make_address("0.0.0.0");
