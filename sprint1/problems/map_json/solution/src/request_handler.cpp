@@ -7,7 +7,7 @@
 namespace model {
 
 using namespace std::literals;
-///*
+
 // сериализация экземпляра класса Office в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
 {
@@ -22,8 +22,72 @@ void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
         {"offsetY", offset.dy}
     };
 }
-//*/
-/*
+
+// сериализация экземпляра класса Building в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Building const& building)
+{
+    auto bounds = building.GetBounds();
+    jv = {
+        {"x", bounds.position.x},
+        {"y", bounds.position.y},
+        {"w", bounds.size.width},
+        {"h", bounds.size.height}
+    };
+}
+
+// сериализация экземпляра класса Building в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Road const& road)
+{
+    auto start = road.GetStart();
+    auto end = road.GetEnd();
+    if (end.x == start.x) { // VERTICAL
+        jv = {
+            {"x0", start.x},
+            {"y0", start.y},
+            {"y1", end.y}
+        };
+    } else {    // HORIZONTAL
+        jv = {
+            {"x0", start.x},
+            {"y0", start.y},
+            {"x1", end.x}
+        };
+    }
+}
+
+// сериализация экземпляра класса Building в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
+{
+    json::object object;
+    // Записываем сводную информацию
+    object["id"] = *map.GetId();
+    object["name"] = map.GetName();
+
+    // Теперь нужно писать массивы
+    // Создаём массив дорог
+    json::array roads;
+    for (const auto& road : map.GetRoads()) {
+        roads.push_back(json::value_from(road));
+    }
+    object["roads"] = roads;
+
+    // Создаём массив зданий
+    json::array buildings;
+    for (const auto& building : map.GetBuildings()) {
+        buildings.push_back(json::value_from(building));
+    }
+    object["buildings"] = buildings;
+
+    // Создаём массив офисов
+    json::array offices;
+    for (const auto& office : map.GetOffices()) {
+        offices.push_back(json::value_from(office));
+    }
+    object["offices"] = offices;
+    jv.emplace_object() = object;
+}
+
+
 Office tag_invoke(json::value_to_tag<Office>, json::value const& jv )
 {
     json::object const& obj = jv.as_object();
@@ -38,7 +102,6 @@ Office tag_invoke(json::value_to_tag<Office>, json::value const& jv )
     Office office{id,{x,y},{offsetX,offsetY}};
     return office;
 }
-*/
 
 } // namespace model
 

@@ -27,7 +27,11 @@ void extract( json::object const& obj, T& t, std::string_view key )
 */
 
 void tag_invoke(json::value_from_tag, json::value& jv, Office const& office);
-//Office tag_invoke(json::value_to_tag<Office>, json::value const& jv);
+void tag_invoke(json::value_from_tag, json::value& jv, Building const& building);
+void tag_invoke(json::value_from_tag, json::value& jv, Road const& road);
+void tag_invoke(json::value_from_tag, json::value& jv, Map const& map);
+
+Office tag_invoke(json::value_to_tag<Office>, json::value const& jv);
 /*
 Building tag_invoke(json::value_to_tag<Building>, json::value const& jv);
 void tag_invoke(json::value_from_tag, json::value jv, Building const& building);
