@@ -53,6 +53,11 @@ using StringRequest = http::request<http::string_body>;
 // Ответ, тело которого представлено в виде строки
 using StringResponse = http::response<http::string_body>;
 
+struct ExeptionInfo {
+    http::status status;
+    std::string body;
+};
+
 struct ContentType {
     ContentType() = delete;
     constexpr static std::string_view TEXT_HTML = "text/html"sv;
