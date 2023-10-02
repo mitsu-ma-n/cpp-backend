@@ -125,6 +125,8 @@ int main(int argc, const char* argv[]) {
             sender(HandleRequest(std::forward<decltype(req)>(req)));
     });
 */
+
+/*
         model::Office off{model::Office::Id("asd"s),{0,0},{0,0}};
         std::cout << serialize( json::value_from( off ) ) << std::endl;
 
@@ -132,7 +134,7 @@ int main(int argc, const char* argv[]) {
         for (const auto& map : maps) {
             std::cout << serialize( json::value_from( map ) ) << std::endl;
         }
-
+*/
 
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         std::cout << "Server has started..."sv << std::endl;
