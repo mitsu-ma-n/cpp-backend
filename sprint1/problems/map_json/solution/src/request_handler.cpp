@@ -1,6 +1,46 @@
 #include "request_handler.h"
+#include "model.h"
+
 #include <iostream>
 #include <string_view>
+
+namespace model {
+
+using namespace std::literals;
+///*
+// сериализация экземпляра класса Office в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
+{
+    auto id = *office.GetId();
+    auto pos = office.GetPosition();
+    auto offset = office.GetOffset();
+    jv = {
+        {"id", id},
+        {"x", pos.x},
+        {"y", pos.y},
+        {"offsetX", offset.dx},
+        {"offsetY", offset.dy}
+    };
+}
+//*/
+/*
+Office tag_invoke(json::value_to_tag<Office>, json::value const& jv )
+{
+    json::object const& obj = jv.as_object();
+    std::string id_str (obj.at("id"s).as_string());
+    Office::Id id(std::move(id_str));
+
+    int x = obj.at("x"s).as_int64();
+    int y = obj.at("y"s).as_int64();
+    int offsetX = obj.at("offsetX"s).as_int64();
+    int offsetY = obj.at("offsetY"s).as_int64();
+
+    Office office{id,{x,y},{offsetX,offsetY}};
+    return office;
+}
+*/
+
+} // namespace model
 
 namespace http_handler {
 
@@ -25,6 +65,20 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     const auto text_response = [&req,this](http::status status, std::string_view text, size_t size) {
         return this->MakeStringResponse(status, text, size, req.version(), req.keep_alive());
     };
+
+
+
+/*
+    std::string res("[");
+    auto& maps = game_.GetMaps();
+    for (auto& map : maps) {
+        res += R"({"id)"s + map.GetId() + ": "
+        auto id = map.GetId();
+        auto name = map.GetName();
+        std::string map_info
+
+    }
+*/
 
     std::string response_body("Hello, "sv);
     auto req_method = req.method();

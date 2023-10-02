@@ -7,6 +7,7 @@
 
 #include "json_loader.h"
 #include "request_handler.h"
+#include "model.h"
 
 using namespace std::literals;
 namespace net = boost::asio;
@@ -124,6 +125,9 @@ int main(int argc, const char* argv[]) {
             sender(HandleRequest(std::forward<decltype(req)>(req)));
     });
 */
+        model::Office off{model::Office::Id("asd"s),{0,0},{0,0}};
+        std::cout << serialize( json::value_from( off ) ) << std::endl;
+
 
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
         std::cout << "Server has started..."sv << std::endl;
