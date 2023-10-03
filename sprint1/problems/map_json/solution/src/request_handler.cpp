@@ -3,6 +3,7 @@
 #include "boost/json/serialize.hpp"
 #include "model.h"
 
+#include <cstddef>
 #include <iostream>
 #include <string_view>
 
@@ -143,8 +144,10 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
 
     auto req_method = req.method();
     // Определяем цель запроса
-    std::string_view req_target = req.target();
-    std::string target(req_target.begin()+1,req_target.end());
+    std::string req_target(req.target());
+    if (req_target.size()-1 == req_target.rfind('/')) {
+        req_target.erase(req_target.size()-1);
+    }
 
     std::string_view content_type(ContentType::TEXT_HTML);
     auto status = http::status::ok;
@@ -153,7 +156,6 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     try {
         std::string api_path("/api/");
         std::string maps_path("/api/v1/maps");
-        std::string maps_id_path("/api/v1/maps/");
 
         if (!req_target.starts_with(api_path)) {
             // Если пошли не в /api/, сразу пишем, что страница не найдена
@@ -206,7 +208,7 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
         }
 
     } catch (const ExeptionInfo& ex) {
-        std::cout << "Status: " << ex.status << " Body: " << ex.body << std::endl;
+        // std::cout << "Status: " << ex.status << " Body: " << ex.body << std::endl;
         status = ex.status;
         response_body = ex.body;
     }
