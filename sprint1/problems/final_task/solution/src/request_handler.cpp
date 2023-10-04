@@ -3,13 +3,18 @@
 #include "boost/beast/http/status.hpp"
 #include <boost/json.hpp>
 #include "boost/json/serialize.hpp"
+#include <boost/url.hpp>
 #include <iostream>
 #include <string_view>
 
+#include "boost/json/value_from.hpp"
 #include "model.h"
 #include "json_fields.h"
+#include "api_strings.h"
 
 namespace json = boost::json;
+namespace urls = boost::urls;
+namespace core = boost::core;
 
 // tag_invoke должны быть определны в том же namespace, в котором определны классы,
 // которые ими обрабатываются. В наше случае это model
@@ -107,6 +112,15 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
 
 namespace http_handler {
 
+// сериализация экземпляра класса ResponseError в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, http_handler::ResponseError const& resp_err)
+{
+    jv = {
+        {JsonField::ERROR_CODE, resp_err.code},
+        {JsonField::ERROR_MESSAGE, resp_err.message}
+    };
+}
+
 // Создаёт StringResponse с заданными параметрами
 StringResponse RequestHandler::MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
                                   bool keep_alive,
@@ -122,6 +136,60 @@ StringResponse RequestHandler::MakeStringResponse(http::status status, std::stri
     return response;
 }
 
+std::string GenerateErrorResponse(const std::string& code, const std::string& msg) {
+    ResponseError response{code,msg};
+    return json::serialize(json::value_from(response));
+}
+
+// Функция представляет путь вида "/my/nice/path" как массив строк ["my", "nice", "path"]
+std::vector<std::string> GetSegmentsFromPath( core::string_view s )
+{
+    urls::url_view u ( s );
+    std::vector< std::string > seq;
+    for( auto seg : u.segments() )
+        seq.push_back( seg );
+    return seq;
+}
+
+// Функция генерит ответ response на запрос к API. Запрос представлен в виде массива "папок" segments.
+// Возвращает статус, который соответствует сгенерированному ответу.
+http::status RequestHandler::GetApiResponse(std::string& response, const std::vector<std::string>& segments) {
+    // В данный момент доаступна только версия v1 и только карты
+    if (segments[ApiString::VERSION_POS] == ApiString::VERSION_PATH && 
+        segments[ApiString::MAPS_POS] == ApiString::MAPS_PATH) 
+    {   // Запросили карты
+        return GetMaps(response,segments);
+    } else {    // Неизвестный запрос
+        response = GenerateErrorResponse("badRequest", "Bad Request");
+        return http::status::bad_request;
+    }
+}
+
+http::status RequestHandler::GetMaps(std::string& response, const std::vector<std::string>& segments) {
+    // В данный момент доаступна только версия v1 и только карты
+    if (segments.size() == ApiString::MAP_ID_POS) {   // Запросили только список карт
+        response = serialize(json::value_from( game_.GetMaps() ));
+        return http::status::ok;
+    } else {    // Запрос конкретной карты
+        return GetMap(response,segments);
+    }
+}
+
+http::status RequestHandler::GetMap(std::string& response, const std::vector<std::string>& segments) {
+    auto map_id = segments[ApiString::MAP_ID_POS];
+    // ищем карту
+    for (const auto& map : game_.GetMaps()) {
+        if (*map.GetId() == map_id) {   // Нашли карту
+            response = serialize(json::value_from( map ));
+            return http::status::ok;
+        }
+    }
+    // обошли весь список, но карту не нашли
+    response = GenerateErrorResponse("mapNotFound"s, "Map not found"s);
+    return http::status::not_found;
+}
+
+
 StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     const auto text_response = [&req,this](http::status status, std::string_view text, size_t size, std::string_view content_type) {
         return this->MakeStringResponse(status, text, size, req.version(), req.keep_alive(), content_type);
@@ -130,91 +198,47 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     auto req_method = req.method();
     // Определяем цель запроса
     std::string req_target(req.target());
+    // Удаляем завершающий слэш, чтобы не мешал разбору
     if (req_target.size()-1 == req_target.rfind('/')) {
         req_target.erase(req_target.size()-1);
     }
 
-    std::string_view content_type(ContentType::TEXT_HTML);
-    auto status = http::status::ok;
-    std::string response_body("");
+    // Представление пути в виде массива с именами
+    auto segments = GetSegmentsFromPath(std::string_view(req_target));
 
-    try {
-        std::string api_path("/api/");
-        std::string maps_path("/api/v1/maps");
+    http::status status;
+    std::string content_type;
+    std::string response_body;
 
-        if (!req_target.starts_with(api_path)) {
-            // Если пошли не в /api/, сразу пишем, что страница не найдена
-            std::string err_body = "Page Not Found!"s;
-            throw ExeptionInfo{http::status::not_found, err_body};
-        } 
-        
-        content_type = ContentType::APP_JSON;
-        if (!req_target.starts_with(maps_path)) {
-            // Можем отдавать только карты. Если попросили не карты:
-            std::string err_body = R"({
-"code": "badRequest",
-"message": "Bad request to API"
-})"s;
-            throw ExeptionInfo{http::status::bad_request, err_body};
-        }
-
-        auto maps = game_.GetMaps();
-
-        // Попросили карты - отдаём список
-        if (req_target == maps_path) {
-            std::string err_body(serialize(json::value_from( maps )));
-            throw ExeptionInfo{http::status::ok, err_body};
-        }
-
-        auto map_id = req_target.substr(maps_path.size()+1);
-        auto map_delimiter = req_target.substr(maps_path.size(),1);
-        if (!map_delimiter.empty() && map_delimiter == "/"s) {
-            // Попросили конкретную карту - ищем карту
-            for (const auto& map : maps) {
-                if (*map.GetId() == map_id) {
-                    std::string err_body(serialize(json::value_from( map )));
-                    throw ExeptionInfo{http::status::ok, err_body};
-                }
-            }
-            // Всё прошли и не нашли - возвращаем ошибку
-            std::string err_body(R"({
-"code": "mapNotFound",
-"message": "Map not found"
-})"sv);
-            throw ExeptionInfo{http::status::not_found, err_body};
-        }
-        else {
-            // Можем отдавать только карты. Если попросили не карты:
-            std::string err_body = R"({
-"code": "badRequest",
-"message": "Bad request to API"
-})"s;
-            throw ExeptionInfo{http::status::bad_request, err_body};
-        }
-
-    } catch (const ExeptionInfo& ex) {
-        // std::cout << "Status: " << ex.status << " Body: " << ex.body << std::endl;
-        status = ex.status;
-        response_body = ex.body;
-    }
-
-    // возможные варианты:
-    // status: ok, 400, 404
-    // body: maps, map, error
-    // status - body
-    // ok - maps
-    // ok - map
-    // 400 - error(badRequest)
-    // 404 - error(mapNotFound)
-
-    if (req_method == http::verb::get) {
-        return text_response(status, response_body, response_body.size(), content_type);
-    } else if (req_method == http::verb::head) {
-        return text_response(http::status::ok, ""sv, response_body.size(), content_type);
+    if(segments.empty()) {  // В запросе пусто
+        // Формируем текстовый ответ "Страница не найдена"
+        content_type = ContentType::TEXT_HTML;
+        status = http::status::not_found;
+        response_body = "Page not found!"s;
     } else {
-        std::string response_not_allowed_body("Invalid method"sv);
-        return text_response(http::status::method_not_allowed, response_not_allowed_body, response_not_allowed_body.size(), content_type);
+        if (std::string_view(segments[ApiString::MAIN_POS]) == ApiString::MAIN_PATH) {    // Запрос к API
+            content_type = ContentType::APP_JSON;   // Из API отвечаем JSON-ом
+            status = GetApiResponse(response_body, segments);
+        } else {    // Неизвестный запрос
+            // Формируем текстовый ответ "Страница не найдена"
+            content_type = ContentType::TEXT_HTML;
+            status = http::status::not_found;
+            response_body = "Page not found!"s;
+        }
     }
+
+    int response_size = 0;
+    if (req_method == http::verb::get) {
+        response_size = response_body.size();
+    } else if (req_method == http::verb::head) {
+        response_size = response_body.size();   // Запоминаем размер
+        response_body = ""s;    // Зачищаем тело запроса
+    } else {    // Недопустимый метод
+        status = http::status::method_not_allowed;
+        response_body = "Invalid method"s;
+        response_size = response_body.size();   // Запоминаем размер
+    }
+    return text_response(status, response_body, response_size, content_type);
 }
 
 }  // namespace http_handler

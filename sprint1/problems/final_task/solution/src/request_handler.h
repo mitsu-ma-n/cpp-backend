@@ -1,6 +1,4 @@
 #pragma once
-// boost.beast будет использовать std::string_view вместо boost::string_view
-#define BOOST_BEAST_USE_STD_STRING_VIEW
 
 #include <utility>
 
@@ -26,6 +24,12 @@ struct ExeptionInfo {
     std::string body;
 };
 
+struct ResponseError {
+    std::string code;
+    std::string message;
+};
+
+
 struct ContentType {
     ContentType() = delete;
     constexpr static std::string_view TEXT_HTML = "text/html"sv;
@@ -46,6 +50,10 @@ public:
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
         send(HandleRequest(std::forward<decltype(req)>(req)));
     }
+
+    http::status GetApiResponse(std::string& response, const std::vector<std::string>& segments);
+    http::status GetMaps(std::string& response, const std::vector<std::string>& segments);
+    http::status GetMap(std::string& response, const std::vector<std::string>& segments);
 
     StringResponse HandleRequest(StringRequest&& req);
     StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,

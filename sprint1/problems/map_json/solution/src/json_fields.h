@@ -1,9 +1,5 @@
 #pragma once
 
-#include <string_view>
-
-using namespace std::literals;
-
 struct JsonField {
     JsonField() = delete;
     // Game
@@ -30,5 +26,8 @@ struct JsonField {
     constexpr static char OFFICE_POS_Y[] = "y";
     constexpr static char OFFICE_OFFSET_DX[] = "offsetX";
     constexpr static char OFFICE_OFFSET_DY[] = "offsetY";
+    // Errors
+    constexpr static char ERROR_CODE[] = "code";
+    constexpr static char ERROR_MESSAGE[] = "message";
     // При появлении новых данных в модели внутрь JsonField нужно добавить их названия в JSON
 };

@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 20)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-find_package(Boost 1.78.0 REQUIRED)
+# url поставляется в виде скомпилированной библиотеки
+# такие нужно подключать через COMPONENTS
+find_package(Boost 1.83.0 REQUIRED COMPONENTS url)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
@@ -14,8 +16,11 @@ endif()
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
 add_executable(game_server
 	src/main.cpp
+	src/api_strings.h
 	src/http_server.cpp
 	src/http_server.h
 	src/sdk.h
@@ -30,3 +35,4 @@ add_executable(game_server
 	src/request_handler.h
 )
 target_link_libraries(game_server PRIVATE Threads::Threads)
+target_link_libraries(game_server PRIVATE Boost::url)
