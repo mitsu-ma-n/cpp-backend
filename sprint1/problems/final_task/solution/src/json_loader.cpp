@@ -1,44 +1,111 @@
 #include "json_loader.h"
-#include "model.h"
 
 #include <boost/json.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include "boost/json/value_to.hpp"
+// Позволяет загрузить содержимое файла в виде строки:
 #include <boost/property_tree/json_parser.hpp>
 
 #include <iostream>
-#include <string>
+#include <string_view>
+
+#include "json_fields.h"
+#include "model.h"
 
 namespace json = boost::json;
 using namespace std::literals;
 
 using namespace model;
 
-namespace json_loader {
-
-void print(boost::property_tree::ptree const& pt)
+// tag_invoke должны быть определны в том же namespace, в котором определны классы,
+// которые ими обрабатываются. В наше случае это model
+namespace model {
+Building tag_invoke(json::value_to_tag<Building>, json::value const& jv)
 {
-    using boost::property_tree::ptree;
-    ptree::const_iterator end = pt.end();
-    for (ptree::const_iterator it = pt.begin(); it != end; ++it) {
-        std::cout << it->first << ": " << it->second.get_value<std::string>() << std::endl;
-        print(it->second);
+    json::object const& obj = jv.as_object();
+    return Building ({
+        value_to<Coord>(obj.at(std::string(JsonField::BUILDING_POS_X))),
+        value_to<Coord>(obj.at(std::string(JsonField::BUILDING_POS_Y))),
+        value_to<Dimension>(obj.at(std::string(JsonField::BUILDING_SIZE_W))),
+        value_to<Dimension>(obj.at(std::string(JsonField::BUILDING_SIZE_H)))
+    });
+
+}
+
+Road tag_invoke(json::value_to_tag<Road>, json::value const& jv)
+{
+    json::object const& obj = jv.as_object();
+
+    Coord x0(value_to<Coord>(obj.at(std::string(JsonField::ROAD_START_X))));
+    Coord y0(value_to<Coord>(obj.at(std::string(JsonField::ROAD_START_Y))));
+
+    if (obj.contains(std::string(JsonField::ROAD_END_X))) {
+        Coord end(value_to<Coord>(obj.at(std::string(JsonField::ROAD_END_X))));
+        return Road{Road::HORIZONTAL, {x0, y0}, end};
+    } else {
+        Coord end(value_to<Coord>(obj.at(std::string(JsonField::ROAD_END_Y))));
+        return Road{Road::VERTICAL, {x0, y0}, end};
     }
 }
 
-auto GetArrayFromValue(json::value& val, std::string key) {
-    //std::cout << key << " : "sv << val.at(key) << std::endl;
-    return val.as_object().at(key).as_array();
+Office tag_invoke(json::value_to_tag<Office>, json::value const& jv)
+{
+    json::object const& obj = jv.as_object();
+    return Office {
+        Office::Id(value_to<std::string>(obj.at(std::string(JsonField::OFFICE_ID)))),
+        {
+            value_to<Coord>(obj.at(std::string(JsonField::OFFICE_POS_X))),
+            value_to<Coord>(obj.at(std::string(JsonField::OFFICE_POS_Y)))
+        },
+        {
+            value_to<Dimension>(obj.at(std::string(JsonField::OFFICE_OFFSET_DX))),
+            value_to<Dimension>(obj.at(std::string(JsonField::OFFICE_OFFSET_DY)))
+        }
+    };
 }
 
-auto GetStringFromValue(json::value& val, std::string key) {
-    //std::cout << key << " : "sv << val.at(key) << std::endl;
-    return val.as_object().at(key).as_string();
+void AddRoads(Map& map, json::object const& obj) {
+    std::vector<Road> roads = value_to<std::vector<Road>>(obj.at(std::string(JsonField::MAP_ROADS)));
+    for (const auto& road : roads) {
+        map.AddRoad(road);
+    }
 }
 
-auto GetIntFromValue(json::value& val, std::string key) {
-    //std::cout << key << " : "sv << val.at(key) << std::endl;
-    return val.as_object().at(key).as_int64();
+void AddBuildings(Map& map, json::object const& obj) {
+    std::vector<Building> buildings = value_to<std::vector<Building>>(obj.at(std::string(JsonField::MAP_BUILDINGS)));
+    for (const auto& building : buildings) {
+        map.AddBuilding(building);
+    }
 }
+
+void AddOffices(Map& map, json::object const& obj) {
+    // Добавляем офисы
+    std::vector<Office> offices = value_to<std::vector<Office>>(obj.at(std::string(JsonField::MAP_OFFICES)));
+    for (const auto& office : offices) {
+        map.AddOffice(office);
+    }
+}
+
+Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
+{
+    json::object const& obj = jv.as_object();
+
+    // Конструируем карту
+    Map map{
+        Map::Id(value_to<std::string>(obj.at(std::string(JsonField::MAP_ID)))),
+        value_to<std::string>(obj.at(std::string(JsonField::MAP_NAME)))
+    };
+
+    AddRoads(map,obj);
+    AddBuildings(map,obj);
+    AddOffices(map,obj);
+    
+    return map;
+}
+
+} // namespace model
+
+
+namespace json_loader {
 
 Game LoadGame(const std::filesystem::path& json_path) {
     // Загрузить содержимое файла json_path в виде строки
@@ -51,76 +118,12 @@ Game LoadGame(const std::filesystem::path& json_path) {
     // Распарсить строку как JSON, используя boost::json::parse
     // Получаем json-объект из строки (тип value)
     auto parsed_config_json = json::parse(input);
+    auto obj = parsed_config_json.as_object();
 
-    // Получили список карт
-    auto maps_json = GetArrayFromValue(parsed_config_json, "maps"s);
-
-    // Цикл по картам
-    for (auto map_json : maps_json) {
-        // Достаём id
-        std::string map_id_str(GetStringFromValue(map_json, "id"s));
-        Map::Id map_id(std::move(map_id_str));
-        // Достаём name
-        std::string  map_name(GetStringFromValue(map_json, "name"s));
-
-        // Конструируем карту
-        Map model_map{map_id,map_name};
-
-        // Достаём roads
-        auto roads_json = GetArrayFromValue(map_json, "roads"s);
-        for (auto road_json : roads_json) {
-            // Достаём координаты 
-            Coord x0(GetIntFromValue(road_json, "x0"s));
-            Coord y0(GetIntFromValue(road_json, "y0"s));
-
-            // Добавялем дорогу на карту
-            if (road_json.as_object().contains("x1"s)) {
-                Coord x1(GetIntFromValue(road_json, "x1"s));
-                Road model_road{Road::HORIZONTAL,Point{x0,y0},x1};
-                model_map.AddRoad(model_road);
-            } else {
-                Coord y1(GetIntFromValue(road_json, "y1"s));
-                Road model_road{Road::VERTICAL,Point{x0,y0},y1};
-                model_map.AddRoad(model_road);
-            }
-        }
-
-        // Достаём buildings
-        auto buildings_json = GetArrayFromValue(map_json, "buildings"s);
-        for (auto building_json : buildings_json) {
-            // Достаём координаты 
-            Coord x(GetIntFromValue(building_json, "x"s));
-            Coord y(GetIntFromValue(building_json, "y"s));
-            // Достаём размеры 
-            Coord w(GetIntFromValue(building_json, "w"s));
-            Coord h(GetIntFromValue(building_json, "h"s));
-
-            // Добавляем здание на карту
-            Building model_building({x,y,w,h});
-            model_map.AddBuilding(model_building);
-        }
-
-        // Достаём buildings
-        auto offices_json = GetArrayFromValue(map_json, "offices"s);
-        for (auto office_json : offices_json) {
-            // Достаём id
-            std::string office_id_str(GetStringFromValue(office_json, "id"s));
-            Office::Id office_id(std::move(office_id_str));
-
-            // Достаём координаты 
-            Coord x(GetIntFromValue(office_json, "x"s));
-            Coord y(GetIntFromValue(office_json, "y"s));
-            // Достаём размеры 
-            Dimension offsetX(GetIntFromValue(office_json, "offsetX"s));
-            Dimension offsetY(GetIntFromValue(office_json, "offsetY"s));
-
-            // Добавляем офис на карту
-            Office model_office{office_id,{x,y},{offsetX,offsetY}};
-            model_map.AddOffice(model_office);
-        }
-
-        // Добавляем заполненную карту в игру
-        game.AddMap(model_map);
+    // Добавляем карты в игру
+    auto maps = value_to<std::vector<Map>>(obj.at(std::string(JsonField::GAME_MAPS)));
+    for (auto map : maps) {
+        game.AddMap(map);
     }
    
     return game;

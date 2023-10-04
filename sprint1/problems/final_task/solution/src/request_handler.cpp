@@ -1,16 +1,19 @@
 #include "request_handler.h"
-#include "boost/beast/http/status.hpp"
-#include "boost/json/serialize.hpp"
-#include "model.h"
 
-#include <cstddef>
+#include "boost/beast/http/status.hpp"
+#include <boost/json.hpp>
+#include "boost/json/serialize.hpp"
 #include <iostream>
 #include <string_view>
 
+#include "model.h"
+#include "json_fields.h"
+
+namespace json = boost::json;
+
+// tag_invoke должны быть определны в том же namespace, в котором определны классы,
+// которые ими обрабатываются. В наше случае это model
 namespace model {
-
-using namespace std::literals;
-
 // сериализация экземпляра класса Office в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
 {
@@ -18,11 +21,11 @@ void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
     auto pos = office.GetPosition();
     auto offset = office.GetOffset();
     jv = {
-        {"id", id},
-        {"x", pos.x},
-        {"y", pos.y},
-        {"offsetX", offset.dx},
-        {"offsetY", offset.dy}
+        {JsonField::OFFICE_ID, id},
+        {JsonField::OFFICE_POS_X, pos.x},
+        {JsonField::OFFICE_POS_Y, pos.y},
+        {JsonField::OFFICE_OFFSET_DX, offset.dx},
+        {JsonField::OFFICE_OFFSET_DY, offset.dy}
     };
 }
 
@@ -31,10 +34,10 @@ void tag_invoke(json::value_from_tag, json::value& jv, Building const& building)
 {
     auto bounds = building.GetBounds();
     jv = {
-        {"x", bounds.position.x},
-        {"y", bounds.position.y},
-        {"w", bounds.size.width},
-        {"h", bounds.size.height}
+        {JsonField::BUILDING_POS_X, bounds.position.x},
+        {JsonField::BUILDING_POS_Y, bounds.position.y},
+        {JsonField::BUILDING_SIZE_W, bounds.size.width},
+        {JsonField::BUILDING_SIZE_H, bounds.size.height}
     };
 }
 
@@ -45,15 +48,15 @@ void tag_invoke(json::value_from_tag, json::value& jv, Road const& road)
     auto end = road.GetEnd();
     if (end.x == start.x) { // VERTICAL
         jv = {
-            {"x0", start.x},
-            {"y0", start.y},
-            {"y1", end.y}
+            {JsonField::ROAD_START_X, start.x},
+            {JsonField::ROAD_START_Y, start.y},
+            {JsonField::ROAD_END_Y, end.y}
         };
     } else {    // HORIZONTAL
         jv = {
-            {"x0", start.x},
-            {"y0", start.y},
-            {"x1", end.x}
+            {JsonField::ROAD_START_X, start.x},
+            {JsonField::ROAD_START_Y, start.y},
+            {JsonField::ROAD_END_X, end.x}
         };
     }
 }
@@ -71,17 +74,17 @@ void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
 
     json::object object;
     // Записываем сводную информацию
-    object["id"] = *map.GetId();
-    object["name"] = map.GetName();
+    object[JsonField::MAP_ID] = *map.GetId();
+    object[JsonField::MAP_NAME] = map.GetName();
 
     // Теперь нужно писать массивы
-    object["roads"] = form_array(map.GetRoads());
-    object["buildings"] = form_array(map.GetBuildings());;
-    object["offices"] = form_array(map.GetOffices());
+    object[JsonField::MAP_ROADS] = form_array(map.GetRoads());
+    object[JsonField::MAP_BUILDINGS] = form_array(map.GetBuildings());;
+    object[JsonField::MAP_OFFICES] = form_array(map.GetOffices());
     jv.emplace_object() = object;
 }
 
-// сериализация экземпляра класса Map в JSON-значение
+// сериализация массива std::vector<Map> в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& maps)
 {
     auto form_array = [](auto container){
@@ -89,8 +92,8 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
         for (const auto& item : container) {
             json::object object;
             // Записываем сводную информацию
-            object["id"] = *item.GetId();
-            object["name"] = item.GetName();
+            object[JsonField::MAP_ID] = *item.GetId();
+            object[JsonField::MAP_NAME] = item.GetName();
 
             arr.push_back(object);
         }
@@ -99,24 +102,8 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
 
     jv = form_array(maps);
 }
-
-
-Office tag_invoke(json::value_to_tag<Office>, json::value const& jv )
-{
-    json::object const& obj = jv.as_object();
-    std::string id_str (obj.at("id"s).as_string());
-    Office::Id id(std::move(id_str));
-
-    int x = obj.at("x"s).as_int64();
-    int y = obj.at("y"s).as_int64();
-    int offsetX = obj.at("offsetX"s).as_int64();
-    int offsetY = obj.at("offsetY"s).as_int64();
-
-    Office office{id,{x,y},{offsetX,offsetY}};
-    return office;
-}
-
 } // namespace model
+
 
 namespace http_handler {
 
@@ -136,8 +123,6 @@ StringResponse RequestHandler::MakeStringResponse(http::status status, std::stri
 }
 
 StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
-    //std::string req_view(req.method_string());
-    //std::cout << "RequestHandler::HandleRequest" << req_view << std::endl;
     const auto text_response = [&req,this](http::status status, std::string_view text, size_t size, std::string_view content_type) {
         return this->MakeStringResponse(status, text, size, req.version(), req.keep_alive(), content_type);
     };
@@ -221,10 +206,6 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     // ok - map
     // 400 - error(badRequest)
     // 404 - error(mapNotFound)
-
-    // Проверяем цель на корректность
-    // проверили
-    // Кидаем исключение?
 
     if (req_method == http::verb::get) {
         return text_response(status, response_body, response_body.size(), content_type);

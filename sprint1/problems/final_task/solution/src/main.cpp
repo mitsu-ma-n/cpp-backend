@@ -1,5 +1,5 @@
 #include "sdk.h"
-//
+
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <iostream>
@@ -12,8 +12,6 @@
 using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
-
-using namespace std::literals;
 
 namespace {
 
