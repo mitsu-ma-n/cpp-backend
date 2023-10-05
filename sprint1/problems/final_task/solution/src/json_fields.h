@@ -1,7 +1,6 @@
 #pragma once
 
-struct JsonField {
-    JsonField() = delete;
+namespace json_field {
     // Game
     constexpr static char GAME_MAPS[] = "maps";
     // Map
@@ -29,5 +28,5 @@ struct JsonField {
     // Errors
     constexpr static char ERROR_CODE[] = "code";
     constexpr static char ERROR_MESSAGE[] = "message";
-    // При появлении новых данных в модели внутрь JsonField нужно добавить их названия в JSON
-};
+    // При появлении новых данных в модели внутрь json_field нужно добавить их названия в JSON
+}

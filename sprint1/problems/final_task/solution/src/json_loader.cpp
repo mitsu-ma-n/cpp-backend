@@ -23,10 +23,10 @@ Building tag_invoke(json::value_to_tag<Building>, json::value const& jv)
 {
     json::object const& obj = jv.as_object();
     return Building ({
-        value_to<Coord>(obj.at(std::string(JsonField::BUILDING_POS_X))),
-        value_to<Coord>(obj.at(std::string(JsonField::BUILDING_POS_Y))),
-        value_to<Dimension>(obj.at(std::string(JsonField::BUILDING_SIZE_W))),
-        value_to<Dimension>(obj.at(std::string(JsonField::BUILDING_SIZE_H)))
+        value_to<Coord>(obj.at(std::string(json_field::BUILDING_POS_X))),
+        value_to<Coord>(obj.at(std::string(json_field::BUILDING_POS_Y))),
+        value_to<Dimension>(obj.at(std::string(json_field::BUILDING_SIZE_W))),
+        value_to<Dimension>(obj.at(std::string(json_field::BUILDING_SIZE_H)))
     });
 
 }
@@ -35,14 +35,14 @@ Road tag_invoke(json::value_to_tag<Road>, json::value const& jv)
 {
     json::object const& obj = jv.as_object();
 
-    Coord x0(value_to<Coord>(obj.at(std::string(JsonField::ROAD_START_X))));
-    Coord y0(value_to<Coord>(obj.at(std::string(JsonField::ROAD_START_Y))));
+    Coord x0(value_to<Coord>(obj.at(std::string(json_field::ROAD_START_X))));
+    Coord y0(value_to<Coord>(obj.at(std::string(json_field::ROAD_START_Y))));
 
-    if (obj.contains(std::string(JsonField::ROAD_END_X))) {
-        Coord end(value_to<Coord>(obj.at(std::string(JsonField::ROAD_END_X))));
+    if (obj.contains(std::string(json_field::ROAD_END_X))) {
+        Coord end(value_to<Coord>(obj.at(std::string(json_field::ROAD_END_X))));
         return Road{Road::HORIZONTAL, {x0, y0}, end};
     } else {
-        Coord end(value_to<Coord>(obj.at(std::string(JsonField::ROAD_END_Y))));
+        Coord end(value_to<Coord>(obj.at(std::string(json_field::ROAD_END_Y))));
         return Road{Road::VERTICAL, {x0, y0}, end};
     }
 }
@@ -51,27 +51,27 @@ Office tag_invoke(json::value_to_tag<Office>, json::value const& jv)
 {
     json::object const& obj = jv.as_object();
     return Office {
-        Office::Id(value_to<std::string>(obj.at(std::string(JsonField::OFFICE_ID)))),
+        Office::Id(value_to<std::string>(obj.at(std::string(json_field::OFFICE_ID)))),
         {
-            value_to<Coord>(obj.at(std::string(JsonField::OFFICE_POS_X))),
-            value_to<Coord>(obj.at(std::string(JsonField::OFFICE_POS_Y)))
+            value_to<Coord>(obj.at(std::string(json_field::OFFICE_POS_X))),
+            value_to<Coord>(obj.at(std::string(json_field::OFFICE_POS_Y)))
         },
         {
-            value_to<Dimension>(obj.at(std::string(JsonField::OFFICE_OFFSET_DX))),
-            value_to<Dimension>(obj.at(std::string(JsonField::OFFICE_OFFSET_DY)))
+            value_to<Dimension>(obj.at(std::string(json_field::OFFICE_OFFSET_DX))),
+            value_to<Dimension>(obj.at(std::string(json_field::OFFICE_OFFSET_DY)))
         }
     };
 }
 
 void AddRoads(Map& map, json::object const& obj) {
-    std::vector<Road> roads = value_to<std::vector<Road>>(obj.at(std::string(JsonField::MAP_ROADS)));
+    std::vector<Road> roads = value_to<std::vector<Road>>(obj.at(std::string(json_field::MAP_ROADS)));
     for (const auto& road : roads) {
         map.AddRoad(road);
     }
 }
 
 void AddBuildings(Map& map, json::object const& obj) {
-    std::vector<Building> buildings = value_to<std::vector<Building>>(obj.at(std::string(JsonField::MAP_BUILDINGS)));
+    std::vector<Building> buildings = value_to<std::vector<Building>>(obj.at(std::string(json_field::MAP_BUILDINGS)));
     for (const auto& building : buildings) {
         map.AddBuilding(building);
     }
@@ -79,7 +79,7 @@ void AddBuildings(Map& map, json::object const& obj) {
 
 void AddOffices(Map& map, json::object const& obj) {
     // Добавляем офисы
-    std::vector<Office> offices = value_to<std::vector<Office>>(obj.at(std::string(JsonField::MAP_OFFICES)));
+    std::vector<Office> offices = value_to<std::vector<Office>>(obj.at(std::string(json_field::MAP_OFFICES)));
     for (const auto& office : offices) {
         map.AddOffice(office);
     }
@@ -91,8 +91,8 @@ Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
 
     // Конструируем карту
     Map map{
-        Map::Id(value_to<std::string>(obj.at(std::string(JsonField::MAP_ID)))),
-        value_to<std::string>(obj.at(std::string(JsonField::MAP_NAME)))
+        Map::Id(value_to<std::string>(obj.at(std::string(json_field::MAP_ID)))),
+        value_to<std::string>(obj.at(std::string(json_field::MAP_NAME)))
     };
 
     AddRoads(map,obj);
@@ -121,7 +121,7 @@ Game LoadGame(const std::filesystem::path& json_path) {
     auto obj = parsed_config_json.as_object();
 
     // Добавляем карты в игру
-    auto maps = value_to<std::vector<Map>>(obj.at(std::string(JsonField::GAME_MAPS)));
+    auto maps = value_to<std::vector<Map>>(obj.at(std::string(json_field::GAME_MAPS)));
     for (auto map : maps) {
         game.AddMap(map);
     }

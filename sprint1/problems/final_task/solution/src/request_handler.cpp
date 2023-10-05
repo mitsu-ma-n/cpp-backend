@@ -26,11 +26,11 @@ void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
     auto pos = office.GetPosition();
     auto offset = office.GetOffset();
     jv = {
-        {JsonField::OFFICE_ID, id},
-        {JsonField::OFFICE_POS_X, pos.x},
-        {JsonField::OFFICE_POS_Y, pos.y},
-        {JsonField::OFFICE_OFFSET_DX, offset.dx},
-        {JsonField::OFFICE_OFFSET_DY, offset.dy}
+        {json_field::OFFICE_ID, id},
+        {json_field::OFFICE_POS_X, pos.x},
+        {json_field::OFFICE_POS_Y, pos.y},
+        {json_field::OFFICE_OFFSET_DX, offset.dx},
+        {json_field::OFFICE_OFFSET_DY, offset.dy}
     };
 }
 
@@ -39,10 +39,10 @@ void tag_invoke(json::value_from_tag, json::value& jv, Building const& building)
 {
     auto bounds = building.GetBounds();
     jv = {
-        {JsonField::BUILDING_POS_X, bounds.position.x},
-        {JsonField::BUILDING_POS_Y, bounds.position.y},
-        {JsonField::BUILDING_SIZE_W, bounds.size.width},
-        {JsonField::BUILDING_SIZE_H, bounds.size.height}
+        {json_field::BUILDING_POS_X, bounds.position.x},
+        {json_field::BUILDING_POS_Y, bounds.position.y},
+        {json_field::BUILDING_SIZE_W, bounds.size.width},
+        {json_field::BUILDING_SIZE_H, bounds.size.height}
     };
 }
 
@@ -53,15 +53,15 @@ void tag_invoke(json::value_from_tag, json::value& jv, Road const& road)
     auto end = road.GetEnd();
     if (end.x == start.x) { // VERTICAL
         jv = {
-            {JsonField::ROAD_START_X, start.x},
-            {JsonField::ROAD_START_Y, start.y},
-            {JsonField::ROAD_END_Y, end.y}
+            {json_field::ROAD_START_X, start.x},
+            {json_field::ROAD_START_Y, start.y},
+            {json_field::ROAD_END_Y, end.y}
         };
     } else {    // HORIZONTAL
         jv = {
-            {JsonField::ROAD_START_X, start.x},
-            {JsonField::ROAD_START_Y, start.y},
-            {JsonField::ROAD_END_X, end.x}
+            {json_field::ROAD_START_X, start.x},
+            {json_field::ROAD_START_Y, start.y},
+            {json_field::ROAD_END_X, end.x}
         };
     }
 }
@@ -79,13 +79,13 @@ void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
 
     json::object object;
     // Записываем сводную информацию
-    object[JsonField::MAP_ID] = *map.GetId();
-    object[JsonField::MAP_NAME] = map.GetName();
+    object[json_field::MAP_ID] = *map.GetId();
+    object[json_field::MAP_NAME] = map.GetName();
 
     // Теперь нужно писать массивы
-    object[JsonField::MAP_ROADS] = form_array(map.GetRoads());
-    object[JsonField::MAP_BUILDINGS] = form_array(map.GetBuildings());;
-    object[JsonField::MAP_OFFICES] = form_array(map.GetOffices());
+    object[json_field::MAP_ROADS] = form_array(map.GetRoads());
+    object[json_field::MAP_BUILDINGS] = form_array(map.GetBuildings());;
+    object[json_field::MAP_OFFICES] = form_array(map.GetOffices());
     jv.emplace_object() = object;
 }
 
@@ -97,8 +97,8 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
         for (const auto& item : container) {
             json::object object;
             // Записываем сводную информацию
-            object[JsonField::MAP_ID] = *item.GetId();
-            object[JsonField::MAP_NAME] = item.GetName();
+            object[json_field::MAP_ID] = *item.GetId();
+            object[json_field::MAP_NAME] = item.GetName();
 
             arr.push_back(object);
         }
@@ -116,8 +116,8 @@ namespace http_handler {
 void tag_invoke(json::value_from_tag, json::value& jv, http_handler::ResponseError const& resp_err)
 {
     jv = {
-        {JsonField::ERROR_CODE, resp_err.code},
-        {JsonField::ERROR_MESSAGE, resp_err.message}
+        {json_field::ERROR_CODE, resp_err.code},
+        {json_field::ERROR_MESSAGE, resp_err.message}
     };
 }
 
@@ -154,9 +154,9 @@ std::vector<std::string> GetSegmentsFromPath( core::string_view s )
 // Функция генерит ответ response на запрос к API. Запрос представлен в виде массива "папок" segments.
 // Возвращает статус, который соответствует сгенерированному ответу.
 http::status RequestHandler::GetApiResponse(std::string& response, const std::vector<std::string>& segments) {
-    // В данный момент доаступна только версия v1 и только карты
-    if (segments[ApiString::VERSION_POS] == ApiString::VERSION_PATH && 
-        segments[ApiString::MAPS_POS] == ApiString::MAPS_PATH) 
+    // В данный момент доступна только версия v1 и только карты
+    if (segments[api_strings::VERSION_POS] == api_strings::VERSION_PATH && 
+        segments[api_strings::MAPS_POS] == api_strings::MAPS_PATH) 
     {   // Запросили карты
         return GetMaps(response,segments);
     } else {    // Неизвестный запрос
@@ -166,8 +166,8 @@ http::status RequestHandler::GetApiResponse(std::string& response, const std::ve
 }
 
 http::status RequestHandler::GetMaps(std::string& response, const std::vector<std::string>& segments) {
-    // В данный момент доаступна только версия v1 и только карты
-    if (segments.size() == ApiString::MAP_ID_POS) {   // Запросили только список карт
+    // В данный момент доступна только версия v1 и только карты
+    if (segments.size() == api_strings::MAP_ID_POS) {   // Запросили только список карт
         response = serialize(json::value_from( game_.GetMaps() ));
         return http::status::ok;
     } else {    // Запрос конкретной карты
@@ -176,7 +176,7 @@ http::status RequestHandler::GetMaps(std::string& response, const std::vector<st
 }
 
 http::status RequestHandler::GetMap(std::string& response, const std::vector<std::string>& segments) {
-    auto map_id = segments[ApiString::MAP_ID_POS];
+    auto map_id = segments[api_strings::MAP_ID_POS];
     // ищем карту
     for (const auto& map : game_.GetMaps()) {
         if (*map.GetId() == map_id) {   // Нашли карту
@@ -199,8 +199,8 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
     // Определяем цель запроса
     std::string req_target(req.target());
     // Удаляем завершающий слэш, чтобы не мешал разбору
-    if (req_target.size()-1 == req_target.rfind('/')) {
-        req_target.erase(req_target.size()-1);
+    while (!req_target.empty() && req_target.back() == '/') {
+        req_target.pop_back();
     }
 
     // Представление пути в виде массива с именами
@@ -216,7 +216,7 @@ StringResponse RequestHandler::HandleRequest(StringRequest&& req) {
         status = http::status::not_found;
         response_body = "Page not found!"s;
     } else {
-        if (std::string_view(segments[ApiString::MAIN_POS]) == ApiString::MAIN_PATH) {    // Запрос к API
+        if (std::string_view(segments[api_strings::MAIN_POS]) == api_strings::MAIN_PATH) {    // Запрос к API
             content_type = ContentType::APP_JSON;   // Из API отвечаем JSON-ом
             status = GetApiResponse(response_body, segments);
         } else {    // Неизвестный запрос
