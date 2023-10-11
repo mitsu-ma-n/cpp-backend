@@ -284,7 +284,7 @@ RequestHandler::Response RequestHandler::HandleRequest(StringRequest&& req) {
                     // Make error response
                     // text_response(status, response_body, response_size, content_type);
                 }
-                content_type = ContentType::APP_OCT_STREAM;
+                content_type = GetContentType(decoded);
                 status = http::status::ok;
 
                 return this->MakeFileResponse(status, file, file.size(), req.version(), req.keep_alive(), content_type);
@@ -313,5 +313,23 @@ RequestHandler::Response RequestHandler::HandleRequest(StringRequest&& req) {
     void RequestHandler::SetServerFilesPath(fs::path path) {
         server_files_path = path;
     }
+
+    // Получает расширение файла по его имени
+    std::string RequestHandler::GetFileExtention(const std::string& file_name) {
+        return file_name.substr(file_name.rfind('.'));
+    }
+
+    // Получает тип контента в файле по его имени
+    std::string RequestHandler::GetContentType(const std::string& file_name) {
+        auto it = supported_files.find(GetFileExtention(file_name));
+        if (it != supported_files.end()) {
+            // Известный тип файла. Возвращаем соответствующий тип контента
+            return it->second;
+        } else {
+            // Неизвестный тип файла. Возвращаем "бинарный" тип 
+            return std::string(ContentType::APP_OCT_STREAM);
+        }
+    }
+
 
 }  // namespace http_handler

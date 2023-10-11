@@ -33,7 +33,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
-            "args": ["./data/config.json", "./static/index.html"],   // Аргументы указываются через запятую отдельно. Эта запись соответсвует строке "2222 3333", если бы мы писали в терминале
+            "args": ["./data/config.json", "./static"],   // Аргументы указываются через запятую отдельно. Эта запись соответсвует строке "2222 3333", если бы мы писали в терминале
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
