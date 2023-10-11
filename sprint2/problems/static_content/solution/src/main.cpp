@@ -13,6 +13,8 @@ using namespace std::literals;
 namespace net = boost::asio;
 namespace sys = boost::system;
 
+namespace fs = std::filesystem;
+
 namespace {
 
 // Запускает функцию fn на n потоках, включая текущий
@@ -31,7 +33,7 @@ void RunWorkers(unsigned n, const Fn& fn) {
 }  // namespace
 
 int main(int argc, const char* argv[]) {
-    if (argc != 2) {
+    if (argc != 3) {
         std::cerr << "Usage: game_server <game-config-json>"sv << std::endl;
         return EXIT_FAILURE;
     }
@@ -56,6 +58,10 @@ int main(int argc, const char* argv[]) {
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         http_handler::RequestHandler handler{game};
+
+        // Устанавливаем путь к статическим файлам
+        fs::path base_path{std::string(argv[2])};
+        handler.SetServerFilesPath(base_path);
 
         const auto address = net::ip::make_address("0.0.0.0");
         constexpr net::ip::port_type port = 8080;

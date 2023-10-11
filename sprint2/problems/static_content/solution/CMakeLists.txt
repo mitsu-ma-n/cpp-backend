@@ -30,6 +30,7 @@ add_executable(game_server
 	src/json_loader.cpp
 	src/request_handler.cpp
 	src/request_handler.h
+	src/write_adapter.h
 )
 target_link_libraries(game_server PRIVATE Threads::Threads)
 target_link_libraries(game_server PRIVATE Boost::url)
