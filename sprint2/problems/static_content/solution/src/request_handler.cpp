@@ -265,34 +265,48 @@ RequestHandler::Response RequestHandler::HandleRequest(StringRequest&& req) {
     std::string response_body;
 
     if(segments.empty()) {  // В запросе пусто
-        // Формируем текстовый ответ "Страница не найдена"
-        content_type = ContentType::TEXT_HTML;
-        status = http::status::not_found;
-        response_body = "Page not found!"s;
+        // Нужно вернуть index.html
+        http::file_body::value_type file;
+        auto index_path = server_files_path / fs::path("./index.html");
+        if (sys::error_code ec; file.open(index_path.c_str(), beast::file_mode::read, ec), ec) {
+            std::cerr << "Failed to open file "sv << index_path << std::endl;
+            // Make error response
+            content_type = ContentType::TEXT_PLAIN;
+            status = http::status::not_found;
+            response_body = "File Not Found!"s;
+        } else {
+            content_type = GetContentType(index_path);
+            status = http::status::ok;
+            return this->MakeFileResponse(status, file, file.size(), req.version(), req.keep_alive(), content_type);
+        }
     } else {
         if (std::string_view(segments[api_strings::MAIN_POS]) == api_strings::MAIN_PATH) {    // Запрос к API
             content_type = ContentType::APP_JSON;   // Из API отвечаем JSON-ом
             status = GetApiResponse(response_body, segments);
         } else {    // Запрос к файловой системе
             // Получаем декодированный запрос (он же - потенциальный путь к файлу)
-            auto decoded = "." + GetPathFromUri(req_target);
-            // Преобразуем путь из запроса в путь в фаловой системе
+            // и генерим путь относительно корневой папки сервера
+            auto decoded = server_files_path / fs::path("." + GetPathFromUri(req_target));
+            // Проверяем, что не убежали из корня
             if (IsSubPath(decoded, server_files_path)) {
                 http::file_body::value_type file;
                 if (sys::error_code ec; file.open(decoded.c_str(), beast::file_mode::read, ec), ec) {
-                    std::cout << "Failed to open file "sv << decoded << std::endl;
+                    std::cerr << "Failed to open file "sv << decoded << std::endl;
                     // Make error response
-                    // text_response(status, response_body, response_size, content_type);
+                    content_type = ContentType::TEXT_PLAIN;
+                    status = http::status::not_found;
+                    response_body = "File Not Found!"s;
+                } else {
+                    content_type = GetContentType(decoded);
+                    status = http::status::ok;
+                    return this->MakeFileResponse(status, file, file.size(), req.version(), req.keep_alive(), content_type);
                 }
-                content_type = GetContentType(decoded);
-                status = http::status::ok;
-
-                return this->MakeFileResponse(status, file, file.size(), req.version(), req.keep_alive(), content_type);
             } else {
-                    // Make error response
-                    // text_response(status, response_body, response_size, content_type);
+                // Make error response
+                content_type = ContentType::TEXT_PLAIN;
+                status = http::status::not_found;
+                response_body = "File Not Found!"s;
             }
-
         }
     }
 
