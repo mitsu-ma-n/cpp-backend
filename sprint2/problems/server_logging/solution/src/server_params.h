@@ -10,4 +10,6 @@ namespace server_params {
     constexpr static std::string_view ADRESS          = "0.0.0.0"sv;
     constexpr static std::string_view START_MESSAGE   = "server started"sv;
     constexpr static std::string_view EXIT_MESSAGE    = "server exited"sv;
+    constexpr static std::string_view REQUEST_RECEIV_MESSAGE = "request received"sv;
+    constexpr static std::string_view RESPONSE_SENT_MESSAGE  = "response sent"sv;
 }

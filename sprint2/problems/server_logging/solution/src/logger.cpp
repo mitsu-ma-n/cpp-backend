@@ -44,19 +44,17 @@ void tag_invoke(json::value_from_tag, json::value& jv, logging::record_view cons
 
 // Функция, задающая форматирование сообщений логгера
 void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& strm) {
-    std::string out;
+    json::object jResponseObj;
 
+    // Время
     auto ts = *rec[timestamp];
-    strm << to_iso_extended_string(ts) << ": ";
-
-    // Выводим уровень, заключая его в угловые скобки.
-    strm << "<" << rec[logging::trivial::severity] << "> ";
-
-    // Выводим JSON.
-    strm << "<" << rec[additional_data] << "> ";
-
+    jResponseObj[json_field::LOGGER_TIMESTAMP] = to_iso_extended_string(ts);
+    // Дополнительная информация в формате json::value.
+    jResponseObj[json_field::LOGGER_DATA] = *rec[additional_data];
     // Выводим само сообщение.
-    strm << rec[logging::expressions::smessage];
+    jResponseObj[json_field::LOGGER_MESSAGE] = *rec[logging::expressions::smessage];
+
+    strm << json::value(jResponseObj);
 } 
 
 }

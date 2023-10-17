@@ -62,9 +62,8 @@ int main(int argc, const char* argv[]) {
             if (!ec) {
                 ioc.stop();
             }
-            boost::json::value normal_exit_json_message{{json_field::ERROR_CODE, 0}};
-            BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, normal_exit_json_message)
-                                    << "Server has been finished by system signal..."sv;
+            BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, 0}))
+                                    << server_params::EXIT_MESSAGE;
         });
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
@@ -77,8 +76,8 @@ int main(int argc, const char* argv[]) {
 
         const auto address = net::ip::make_address(server_params::ADRESS);
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-        http_server::ServeHttp(ioc, {address, server_params::PORT}, [&handler](auto&& req, auto&& send) {
-            handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        http_server::ServeHttp(ioc, {address, server_params::PORT}, [&logging_handler](auto&& req, auto&& send) {
+            logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
         });
 
         boost::log::add_common_attributes();
@@ -87,10 +86,12 @@ int main(int argc, const char* argv[]) {
             boost::log::keywords::format = &logger::MyFormatter
         );
 
-
+        boost::json::object server_params_jobject;
+        server_params_jobject[json_field::SERVER_PORT] = server_params::PORT;
+        server_params_jobject[json_field::SERVER_ADDRESS] = server_params::ADRESS;
         // Эта надпись сообщает тестам о том, что сервер запущен и готов обрабатывать запросы
-        BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, {json_field::ERROR_CODE, 0})
-                                << boost::log::add_value(additional_data, {json_field::ERROR_MESSAGE, server_params::START_MESSAGE});
+        BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value(server_params_jobject))
+                                << server_params::START_MESSAGE;
 
         // 6. Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
