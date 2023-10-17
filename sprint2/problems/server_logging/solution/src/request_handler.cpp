@@ -321,29 +321,29 @@ RequestHandler::Response RequestHandler::HandleRequest(StringRequest&& req) {
         response_body = "Invalid method"s;
         response_size = response_body.size();   // Запоминаем размер
     }
+
     return text_response(status, response_body, response_size, content_type);
-    }
+}
 
-    void RequestHandler::SetServerFilesPath(fs::path path) {
-        server_files_path = path;
-    }
+void RequestHandler::SetServerFilesPath(fs::path path) {
+    server_files_path = path;
+}
 
-    // Получает расширение файла по его имени
-    std::string RequestHandler::GetFileExtention(const std::string& file_name) {
-        return file_name.substr(file_name.rfind('.'));
-    }
+// Получает расширение файла по его имени
+std::string RequestHandler::GetFileExtention(const std::string& file_name) {
+    return file_name.substr(file_name.rfind('.'));
+}
 
-    // Получает тип контента в файле по его имени
-    std::string RequestHandler::GetContentType(const std::string& file_name) {
-        auto it = supported_files.find(GetFileExtention(file_name));
-        if (it != supported_files.end()) {
-            // Известный тип файла. Возвращаем соответствующий тип контента
-            return it->second;
-        } else {
-            // Неизвестный тип файла. Возвращаем "бинарный" тип 
-            return std::string(ContentType::APP_OCT_STREAM);
-        }
+// Получает тип контента в файле по его имени
+std::string RequestHandler::GetContentType(const std::string& file_name) {
+    auto it = supported_files.find(GetFileExtention(file_name));
+    if (it != supported_files.end()) {
+        // Известный тип файла. Возвращаем соответствующий тип контента
+        return it->second;
+    } else {
+        // Неизвестный тип файла. Возвращаем "бинарный" тип 
+        return std::string(ContentType::APP_OCT_STREAM);
     }
-
+}
 
 }  // namespace http_handler

@@ -66,4 +66,9 @@ void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std
     Read();
 }
 
+boost::asio::ip::tcp::endpoint SessionBase::GetEndpoint() {
+    return stream_.socket().remote_endpoint();
+}
+
+
 }  // namespace http_server

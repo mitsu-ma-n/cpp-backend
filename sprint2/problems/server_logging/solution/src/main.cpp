@@ -68,16 +68,17 @@ int main(int argc, const char* argv[]) {
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         http_handler::RequestHandler handler{game};
-        http_handler::LoggingRequestHandler logging_handler{handler};
 
         // Устанавливаем путь к статическим файлам
         fs::path base_path{std::string(argv[2])};
         handler.SetServerFilesPath(base_path);
 
+        http_handler::LoggingRequestHandler logging_handler{handler};
+
         const auto address = net::ip::make_address(server_params::ADRESS);
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-        http_server::ServeHttp(ioc, {address, server_params::PORT}, [&logging_handler](auto&& req, auto&& send) {
-            logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        http_server::ServeHttp(ioc, {address, server_params::PORT}, [&logging_handler](auto&& req, auto&& send, auto&& endpoint) {
+            logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send), std::forward<decltype(endpoint)>(endpoint));
         });
 
         boost::log::add_common_attributes();

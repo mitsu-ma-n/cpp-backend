@@ -26,6 +26,7 @@ class SessionBase {
 public:
     // 
     void Run();
+    boost::asio::ip::tcp::endpoint GetEndpoint();
 
 protected:
     // Обёртка для http-запроса, где тело запроса представлено строкой
@@ -84,12 +85,14 @@ public:
 
 private:
     void HandleRequest(HttpRequest&& request) override {
+        auto endpoint = this->GetEndpoint();
         // Захватываем умный указатель на текущий объект Session в лямбде,
         // чтобы продлить время жизни сессии до вызова лямбды.
         // Используется generic-лямбда функция, способная принять response произвольного типа
         request_handler_(std::move(request), [self = this->shared_from_this()](auto&& response) {
             self->Write(std::move(response));
-        });
+        },
+        std::move(endpoint));
     }
 
     // Отдельная функция для получения шаред указателя на себя самого
