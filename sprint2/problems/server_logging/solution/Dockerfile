@@ -24,6 +24,7 @@ RUN apt update && \
 # копируем conanfile.txt в контейнер и запускаем conan install
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
+    conan profile new default --detect && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
     conan install .. --build=missing
 
@@ -48,7 +49,8 @@ USER www
 # Копируем в этот контейнер результат работы предыдущего контейнера
 COPY --from=build /app/build/bin/game_server /app/
 COPY ./data /app/data
+COPY ./static /app/static
 
 # Указываем точку входа: собранный и скопированный из контейнера build
 # веб-сервер, с указанием параметра config.json
-ENTRYPOINT ["/app/game_server", "/app/data/config.json"]
+ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
