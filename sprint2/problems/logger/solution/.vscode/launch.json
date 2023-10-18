@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/build/bin/hello_log",    // Обязательно прописать путь к программе
             "args": [],   // Аргументы указываются через запятую отдельно. Эта запись соответсвует строке "2222 3333", если бы мы писали в терминале
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/../../../../",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

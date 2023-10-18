@@ -32,15 +32,18 @@ class Logger {
         // Конвертируем время из представления time_point в time_t
         const auto t_c = std::chrono::system_clock::to_time_t(now);
         // Возвращаем время в заданном формате (Год-Месяц-День ЧЧ:ММ:СС)
-        return std::put_time(std::localtime(&t_c), "%F %T");
+        return std::put_time(std::gmtime(&t_c), "%F %T");
     }
 
     // Возвращает временнУю метку в виде строки. Используется для генерации имени файла с логами
     std::string GetFileTimeStamp() const {
-        const auto t_c = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        // const auto t_c = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        const auto now = GetTime();
+        // Конвертируем время из представления time_point в time_t
+        const auto t_c = std::chrono::system_clock::to_time_t(now);
         // Возвращаем время в заданном формате (Год_Месяц_День)
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&t_c), "%Y_%m_%d");
+        ss << std::put_time(std::gmtime(&t_c), "%Y_%m_%d");
         return ss.str();
     }
 
@@ -74,7 +77,7 @@ public:
         // Рекурсивный вызов логгирования списка аргументов
         Log(ss, args...);
         // Разом всё сбрасываем в файл
-        std::string path_to_logs("/var/log/");  // Путь к папке с логами
+        std::string path_to_logs("/var/log/sample_log_");  // Путь к папке с логами
         std::string extention(".log");          // Расширение файлов с логами
         const std::lock_guard<std::mutex> lock(file_mutex_);
         // Открываем файл по собранному пути и пишем
