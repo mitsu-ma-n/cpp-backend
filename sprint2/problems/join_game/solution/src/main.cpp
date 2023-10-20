@@ -70,12 +70,11 @@ int main(int argc, const char* argv[]) {
                                     << server_params::EXIT_MESSAGE;
         });
 
-        // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = make_shared<http_handler::RequestHandler>(api_strand, game);
-
         // Устанавливаем путь к статическим файлам
         fs::path base_path{std::string(argv[2])};
-        handler->SetServerFilesPath(base_path);
+
+        // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
+        auto handler = make_shared<http_handler::RequestHandler>(api_strand, game, base_path);
 
         http_handler::LoggingRequestHandler logging_handler{*handler};
 

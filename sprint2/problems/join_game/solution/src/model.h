@@ -167,6 +167,59 @@ private:
     Offices offices_;
 };
 
+class Dog {
+public:
+    using Id = util::Tagged<std::uint32_t, Dog>;
+    using Name = util::Tagged<std::string, Dog>;
+
+    Dog(Id id, Name name) noexcept
+        : id_{std::move(id)}
+        , name_{std::move(name)} {
+    }
+
+    const Id& GetId() const noexcept {
+        return id_;
+    }
+
+    const Name& GetName() const noexcept {
+        return name_;
+    }
+
+private:
+    Id id_;
+    Name name_;
+};
+
+class GameSession {
+public:
+    using Dogs = std::vector<Dog>;
+
+    GameSession(Map& map) noexcept
+        : map_{map} {
+    }
+
+    void AddDog(Dog dog);
+
+    const Dogs& GetDogs() const noexcept {
+        return dogs_;
+    }
+
+    const Dog* FindDog(const Dog::Id& id) const noexcept {
+        if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
+            return &dogs_.at(it->second);
+        }
+        return nullptr;
+    }
+
+private:
+    using DogIdHasher = util::TaggedHasher<Dog::Id>;
+    using DogIdToIndex = std::unordered_map<Dog::Id, size_t, DogIdHasher>;
+
+    Dogs dogs_;
+    Map& map_;
+    DogIdToIndex dog_id_to_index_;
+};
+
 class Game {
 public:
     using Maps = std::vector<Map>;
@@ -190,6 +243,8 @@ private:
 
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
+
+    //GameSession session_;
 };
 
 }  // namespace model

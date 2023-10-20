@@ -21,6 +21,20 @@ void Map::AddOffice(Office office) {
     }
 }
 
+void GameSession::AddDog(Dog dog) {
+    const size_t index = dogs_.size();
+    if (auto [it, inserted] = dog_id_to_index_.emplace(dog.GetId(), index); !inserted) {
+        throw std::invalid_argument("Dog with id "s + std::to_string(*dog.GetId()) + " already exists"s);
+    } else {
+        try {
+            dogs_.emplace_back(std::move(dog));
+        } catch (...) {
+            dog_id_to_index_.erase(it);
+            throw;
+        }
+    }
+}
+
 void Game::AddMap(Map map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_index_.emplace(map.GetId(), index); !inserted) {

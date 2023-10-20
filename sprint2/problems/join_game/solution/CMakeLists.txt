@@ -11,7 +11,16 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
+	src/api_handler.cpp
+	src/api_handler.h
+	src/app.cpp
+	src/app.h
 	src/boost_json.cpp
+	src/file_handler.cpp
+	src/file_handler.h
+	src/http_handler_defs.h
+	src/http_handler_types.cpp
+	src/http_handler_types.h
 	src/http_server.cpp
 	src/http_server.h
 	src/json_fields.h
