@@ -10,8 +10,8 @@ class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
 
-    explicit RequestHandler(Strand api_strand, model::Game& game, fs::path path)
-        : api_handler_{api_strand, game}
+    explicit RequestHandler(Strand api_strand, app::Application& app, fs::path path)
+        : api_handler_{api_strand, app}
         , file_handler_{path} {
     }
 

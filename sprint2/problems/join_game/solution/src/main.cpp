@@ -15,7 +15,7 @@
 #include "logger.h"
 #include "logging_request_handler.h"
 #include "json_fields.h"
-
+#include "app_use_cases.h"
 
 using namespace std::literals;
 namespace net = boost::asio;
@@ -59,6 +59,9 @@ int main(int argc, const char* argv[]) {
         // strand для выполнения запросов к API
         auto api_strand = net::make_strand(ioc);
 
+        // Объект Application содержит сценарии использования
+        app::Application app(game);
+
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         // Подписываемся на сигналы и при их получении завершаем работу сервера
         net::signal_set signals(ioc, SIGINT, SIGTERM);
@@ -74,7 +77,7 @@ int main(int argc, const char* argv[]) {
         fs::path base_path{std::string(argv[2])};
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = make_shared<http_handler::RequestHandler>(api_strand, game, base_path);
+        auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path);
 
         http_handler::LoggingRequestHandler logging_handler{*handler};
 

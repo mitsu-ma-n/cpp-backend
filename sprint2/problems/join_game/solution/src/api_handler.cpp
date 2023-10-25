@@ -125,6 +125,8 @@ bool ApiHandler::IsApiRequest(std::string_view target) {
 std::string ApiHandler::GetPathFromUri(core::string_view s) {
     urls::url_view u(s);
     std::string decoded = u.path();
+    // Почему-то плюсы автоматом не переводятся в пробелы. Добавлена дополнительная обработка
+    std::replace(decoded.begin(), decoded.end(), '+', ' ');
     return decoded;
 }
 
@@ -218,7 +220,7 @@ http::status ApiHandler::GetApiResponse(std::string& response, const std::vector
 http::status ApiHandler::GetMaps(std::string& response, const std::vector<std::string>& segments) const {
     // В данный момент доступна только версия v1 и только карты
     if (segments.size() == api_strings::MAP_ID_POS) {   // Запросили только список карт
-        response = serialize(json::value_from( game_.GetMaps() ));
+        response = serialize(json::value_from( app_.ListMaps() ));
         return http::status::ok;
     } else {    // Запрос конкретной карты
         return GetMap(response,segments);
@@ -228,7 +230,7 @@ http::status ApiHandler::GetMaps(std::string& response, const std::vector<std::s
 http::status ApiHandler::GetMap(std::string& response, const std::vector<std::string>& segments) const {
     auto map_id = segments[api_strings::MAP_ID_POS];
     // ищем карту
-    for (const auto& map : game_.GetMaps()) {
+    for (const auto& map : app_.ListMaps()) {
         if (*map.GetId() == map_id) {   // Нашли карту
             response = serialize(json::value_from( map ));
             return http::status::ok;

@@ -38,7 +38,12 @@ FileRequestResult FileHandler::HandleFileRequest(const StringRequest& req) const
 
     // Получаем декодированный запрос (он же - потенциальный путь к файлу)
     // и генерим путь относительно корневой папки сервера
-    auto decoded = server_files_path_ / fs::path("." + GetPathFromUri(req_target));
+    auto req_path = GetPathFromUri(req_target);
+    if (req_path == "/" || req_path.empty()) {
+        req_path = "/index.html";
+    }
+
+    auto decoded = server_files_path_ / fs::path("." + req_path);
     // Проверяем, что не убежали из корня
     if (IsSubPath(decoded, server_files_path_)) {
         http::file_body::value_type file;
@@ -98,6 +103,8 @@ StringResponse FileHandler::MakeStringResponse(http::status status, std::string_
 std::string FileHandler::GetPathFromUri(core::string_view s) const {
     urls::url_view u(s);
     std::string decoded = u.path();
+    // Почему-то плюсы автоматом не переводятся в пробелы. Добавлена дополнительная обработка
+    std::replace(decoded.begin(), decoded.end(), '+', ' ');
     return decoded;
 }
 

@@ -170,7 +170,7 @@ private:
 class Dog {
 public:
     using Id = util::Tagged<std::uint32_t, Dog>;
-    using Name = util::Tagged<std::string, Dog>;
+    using Name = std::string;
 
     Dog(Id id, Name name) noexcept
         : id_{std::move(id)}
@@ -194,11 +194,11 @@ class GameSession {
 public:
     using Dogs = std::vector<Dog>;
 
-    GameSession(Map& map) noexcept
-        : map_{map} {
+    GameSession(const Map& map) noexcept
+        : map_{&map} {
     }
 
-    void AddDog(Dog dog);
+    Dog* AddDog(Point pos, Dog::Name name);
 
     const Dogs& GetDogs() const noexcept {
         return dogs_;
@@ -216,7 +216,7 @@ private:
     using DogIdToIndex = std::unordered_map<Dog::Id, size_t, DogIdHasher>;
 
     Dogs dogs_;
-    Map& map_;
+    const Map* map_;
     DogIdToIndex dog_id_to_index_;
 };
 
@@ -225,14 +225,27 @@ public:
     using Maps = std::vector<Map>;
 
     void AddMap(Map map);
+    void CreateSession(Map::Id map_id);
 
     const Maps& GetMaps() const noexcept {
         return maps_;
     }
 
     const Map* FindMap(const Map::Id& id) const noexcept {
-        if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
+        if (auto it = map_id_to_map_index_.find(id); it != map_id_to_map_index_.end()) {
             return &maps_.at(it->second);
+        }
+        return nullptr;
+    }
+
+    // Возвращает указатель на игровую сесссию с возможностью изменения
+    GameSession* FindSession(const Map::Id& id) {
+        // В данной реализации одна карта (MapId) соответсвует одной сессии
+        // При необходимости можно будет переделать, чтобы на одной карте было несколько сессий.
+        // Для этого нужно будет добавить критерий "переполнения" сессии и создания новой, например, по количеству 
+        // игроков в текущей найденной сессии
+        if (auto it = map_id_to_session_index_.find(id); it != map_id_to_session_index_.end()) {
+            return &sessions_.at(it->second);
         }
         return nullptr;
     }
@@ -242,9 +255,10 @@ private:
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
     std::vector<Map> maps_;
-    MapIdToIndex map_id_to_index_;
+    MapIdToIndex map_id_to_map_index_;
 
-    //GameSession session_;
+    std::vector<GameSession> sessions_;
+    MapIdToIndex map_id_to_session_index_;
 };
 
 }  // namespace model

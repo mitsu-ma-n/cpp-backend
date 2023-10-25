@@ -15,17 +15,26 @@ namespace app {
 class Player {
 public:
     using Id = util::Tagged<std::string, Player>;
+    using Name = std::string;
 
-    Player(model::Dog& dog, model::GameSession& session) noexcept
-        : dog_(&dog)
+    Player(Id id, model::Dog& dog, model::GameSession& session) noexcept
+        : id_{id}
+        , dog_(&dog)
         , session_(&session) {
     }
 
+    Id GetId() {
+        return id_;
+    }
+
+    Name GetName() {
+        return name_;
+    }
+
+
 private:
-/*
     Id id_;
-    std::string name_;
-*/
+    Name name_;
 
     // Игровая сессия, к которой подключён игрок
     model::GameSession* session_;
@@ -82,7 +91,7 @@ public:
     using PlayersContainer = std::vector<Player>;
 
     // Добавляет нового игрока, который будет управлять собакой dog в игровой сессии session
-    Player& Add(model::Dog dog, model::GameSession session);
+    Player& Add(model::Dog* dog, model::GameSession& session);
     // Возврщает указатель на игрока, который управляет собакой dog на карте map
     Player* FinByDogAndMapId(model::Dog dog, model::Map::Id map);
 /*

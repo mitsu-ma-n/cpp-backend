@@ -6,6 +6,7 @@
 #include "http_server.h"
 #include "model.h"
 #include "http_handler_types.h"
+#include "app_use_cases.h"
 
 #include <iostream>
 #include <filesystem>
@@ -22,9 +23,9 @@ class ApiHandler : public std::enable_shared_from_this<ApiHandler> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
 
-    explicit ApiHandler(Strand api_strand, model::Game& game)
+    explicit ApiHandler(Strand api_strand, app::Application& app)
         : api_strand_{api_strand}
-        , game_{game} {
+        , app_{app} {
     }
 
     ApiHandler(const ApiHandler&) = delete;
@@ -53,7 +54,7 @@ private:
     StringResponse ReportServerError(unsigned version, bool keep_alive) const;
 
     Strand api_strand_;
-    model::Game& game_;
+    app::Application& app_;
 };
 
 }  // namespace http_handler

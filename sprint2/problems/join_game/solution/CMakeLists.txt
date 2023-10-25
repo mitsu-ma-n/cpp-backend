@@ -15,6 +15,8 @@ add_executable(game_server
 	src/api_handler.h
 	src/app.cpp
 	src/app.h
+	src/app_use_cases.cpp
+	src/app_use_cases.h
 	src/boost_json.cpp
 	src/file_handler.cpp
 	src/file_handler.h
