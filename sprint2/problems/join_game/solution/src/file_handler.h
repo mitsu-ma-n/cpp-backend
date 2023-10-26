@@ -67,9 +67,6 @@ private:
     FileResponse MakeFileResponse(http::status status, http::file_body::value_type& body, size_t size, unsigned http_version,
                                   bool keep_alive, std::string_view content_type) const;
 
-    // Генератор сообщения об ошибке
-    StringResponse ReportServerError(unsigned version, bool keep_alive) const;
-
     fs::path server_files_path_;
     std::unordered_map<std::string, std::string> supported_files_;
 };

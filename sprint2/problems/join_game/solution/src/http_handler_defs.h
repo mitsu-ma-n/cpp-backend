@@ -4,13 +4,20 @@
 
 namespace api_strings {
     using namespace std::literals;
-    constexpr static std::string_view MAIN_PATH = "/api/"sv;
-    constexpr static int              MAIN_POS  = 0;
-    constexpr static std::string_view VERSION_PATH = "v1"sv;
+    // --- LVL 0 --- // API
+    constexpr static int              MAIN_POS     = 0;
+    constexpr static std::string_view MAIN_PATH    = "/api/"sv;
+    // --- LVL 1 --- // Version
     constexpr static int              VERSION_POS  = 1;
-    constexpr static std::string_view MAPS_PATH = "maps"sv;
-    constexpr static int              MAPS_POS  = 2;
-    constexpr static int              MAP_ID_POS = 3;
+    constexpr static std::string_view VERSION_PATH = "v1"sv;
+    // --- LVL 2 --- // Target
+    constexpr static int              TARGET_POS   = 2;
+    constexpr static std::string_view MAPS_PATH    = "maps"sv;
+    constexpr static std::string_view GAME_PATH    = "game"sv;
+    // --- LVL 3 --- // Action
+    constexpr static int              ACTION_POS   = 3;
+    constexpr static std::string_view JOIN_PATH    = "join"sv;
+    constexpr static std::string_view PLAYERS_PATH = "players"sv;
 }
 
 namespace ContentType {
@@ -30,4 +37,18 @@ namespace ContentType {
     constexpr static std::string_view TEXT_HTML         = "text/html"sv;
     constexpr static std::string_view TEXT_JS           = "text/javascript"sv;
     constexpr static std::string_view TEXT_PLAIN        = "text/plain"sv;
+};
+
+namespace AllowedMethods {
+    using namespace std::literals;
+    constexpr static std::string_view MAPS    = "GET, HEAD"sv;
+    constexpr static std::string_view JOIN    = "POST"sv;
+    constexpr static std::string_view PLAYERS = "GET, HEAD"sv;
+    // Для единообразия. Для ошибки на самом деле не нужен допустимый метод.
+    constexpr static std::string_view ERROR   = "GET, HEAD"sv;
+};
+
+namespace HttpFildsValue {
+    using namespace std::literals;
+    constexpr static std::string_view NO_CACHE = "no-cache"sv;
 };

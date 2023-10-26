@@ -80,10 +80,6 @@ FileRequestResult FileHandler::HandleFileRequest(const StringRequest& req) const
     return text_response(status, response_body, response_size, content_type);
 }
 
-StringResponse FileHandler::ReportServerError(unsigned version, bool keep_alive) const {
-    return StringResponse();
-}
-
 // Создаёт StringResponse с заданными параметрами
 StringResponse FileHandler::MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
                                   bool keep_alive,

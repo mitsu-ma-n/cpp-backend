@@ -52,7 +52,7 @@ void Game::AddMap(Map map) {
     }
 }
 
-void Game::CreateSession(Map::Id map_id) {
+GameSession* Game::CreateSession(Map::Id map_id) {
     //  Найдём карту, к которой хотим подключиться
     auto map = FindMap(map_id);
     if( !map ) {
@@ -68,6 +68,7 @@ void Game::CreateSession(Map::Id map_id) {
         try {
             // Создаём новую сессию, привязанную к указанной карте
             sessions_.emplace_back(std::move(GameSession{*map}));
+            return &sessions_.back();
         } catch (...) {
             // Не получилось. Откатываем изменения в map_id_to_map_index_
             map_id_to_session_index_.erase(it);

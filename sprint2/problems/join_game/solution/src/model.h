@@ -225,7 +225,7 @@ public:
     using Maps = std::vector<Map>;
 
     void AddMap(Map map);
-    void CreateSession(Map::Id map_id);
+    GameSession* CreateSession(Map::Id map_id);
 
     const Maps& GetMaps() const noexcept {
         return maps_;
@@ -246,8 +246,10 @@ public:
         // игроков в текущей найденной сессии
         if (auto it = map_id_to_session_index_.find(id); it != map_id_to_session_index_.end()) {
             return &sessions_.at(it->second);
+        } else {
+            // Если не нашли сессию для игрока, пробуем создать новую
+            return CreateSession(id);
         }
-        return nullptr;
     }
 
 private:

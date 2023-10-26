@@ -41,7 +41,15 @@ namespace json_field {
     constexpr static char RESPONSE_TIME[]         = "response_time";
     constexpr static char RESPONSE_CODE[]         = "code";
     constexpr static char RESPONSE_CONTENT_TYPE[] = "content_type";
-
-
-    // При появлении новых данных в модели внутрь json_field нужно добавить их названия в JSON
+    // API
+    constexpr static char API_CODE_BAD_REQUEST[]      = "badRequest";
+    constexpr static char API_CODE_INVALID_ARGUMENT[] = "invalidArgument";
+    constexpr static char API_CODE_INVALID_METHOD[]   = "invalidMethod";
+    constexpr static char API_CODE_MAP_NOT_FOUND[]    = "mapNotFound";
+    // JoinParams
+    constexpr static char JOIN_NAME[]   = "userName";
+    constexpr static char JOIN_MAP_ID[] = "mapId";
+    // JoinResult
+    constexpr static char JOIN_TOKEN[]  = "authToken";
+    constexpr static char JOIN_PLAYER_ID[]  = "playerId";
 }

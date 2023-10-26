@@ -5,6 +5,12 @@
 
 namespace http_handler {
 
+class JoinParams {
+public:
+    std::string name;
+    std::string map_id;
+};
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 

@@ -1,6 +1,7 @@
 #include "json_loader.h"
 
 #include <boost/json.hpp>
+#include "api_handler.h"
 #include "boost/json/value_to.hpp"
 // Позволяет загрузить содержимое файла в виде строки:
 #include <boost/property_tree/json_parser.hpp>
@@ -28,7 +29,6 @@ Building tag_invoke(json::value_to_tag<Building>, json::value const& jv)
         value_to<Dimension>(obj.at(std::string(json_field::BUILDING_SIZE_W))),
         value_to<Dimension>(obj.at(std::string(json_field::BUILDING_SIZE_H)))
     });
-
 }
 
 Road tag_invoke(json::value_to_tag<Road>, json::value const& jv)
@@ -102,8 +102,121 @@ Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
     return map;
 }
 
+// сериализация экземпляра класса Office в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Office const& office)
+{
+    auto id = *office.GetId();
+    auto pos = office.GetPosition();
+    auto offset = office.GetOffset();
+    jv = {
+        {json_field::OFFICE_ID, id},
+        {json_field::OFFICE_POS_X, pos.x},
+        {json_field::OFFICE_POS_Y, pos.y},
+        {json_field::OFFICE_OFFSET_DX, offset.dx},
+        {json_field::OFFICE_OFFSET_DY, offset.dy}
+    };
+}
+
+// сериализация экземпляра класса Building в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Building const& building)
+{
+    auto bounds = building.GetBounds();
+    jv = {
+        {json_field::BUILDING_POS_X, bounds.position.x},
+        {json_field::BUILDING_POS_Y, bounds.position.y},
+        {json_field::BUILDING_SIZE_W, bounds.size.width},
+        {json_field::BUILDING_SIZE_H, bounds.size.height}
+    };
+}
+
+// сериализация экземпляра класса Road в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Road const& road)
+{
+    auto start = road.GetStart();
+    auto end = road.GetEnd();
+    if (end.x == start.x) { // VERTICAL
+        jv = {
+            {json_field::ROAD_START_X, start.x},
+            {json_field::ROAD_START_Y, start.y},
+            {json_field::ROAD_END_Y, end.y}
+        };
+    } else {    // HORIZONTAL
+        jv = {
+            {json_field::ROAD_START_X, start.x},
+            {json_field::ROAD_START_Y, start.y},
+            {json_field::ROAD_END_X, end.x}
+        };
+    }
+}
+
+// сериализация экземпляра класса Map в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
+{
+    auto form_array = [](auto container){
+        json::array arr;
+        for (const auto& item : container) {
+            arr.push_back(json::value_from(item));
+        }
+        return arr;
+    };
+
+    json::object object;
+    // Записываем сводную информацию
+    object[json_field::MAP_ID] = *map.GetId();
+    object[json_field::MAP_NAME] = map.GetName();
+
+    // Теперь нужно писать массивы
+    object[json_field::MAP_ROADS] = form_array(map.GetRoads());
+    object[json_field::MAP_BUILDINGS] = form_array(map.GetBuildings());;
+    object[json_field::MAP_OFFICES] = form_array(map.GetOffices());
+    jv.emplace_object() = object;
+}
+
+// сериализация массива std::vector<Map> в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& maps)
+{
+    auto form_array = [](auto container){
+        json::array arr;
+        for (const auto& item : container) {
+            json::object object;
+            // Записываем сводную информацию
+            object[json_field::MAP_ID] = *item.GetId();
+            object[json_field::MAP_NAME] = item.GetName();
+
+            arr.push_back(object);
+        }
+        return arr;
+    };
+
+    jv = form_array(maps);
+}
+
 } // namespace model
 
+namespace app {
+
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::JoinGameResult const& join_result) {
+    json::object object;
+    object[json_field::JOIN_TOKEN] = join_result.GetTokenAsString();
+    object[json_field::JOIN_PLAYER_ID] = join_result.GetPlayerIdAsString();
+    jv.emplace_object() = object;
+}
+
+} // namespace app
+
+
+namespace http_handler {
+
+JoinParams tag_invoke(json::value_to_tag<JoinParams>, json::value const& jv)
+{
+    json::object const& obj = jv.as_object();
+    return JoinParams ({
+        value_to<std::string>(obj.at(std::string(json_field::JOIN_NAME))),
+        value_to<std::string>(obj.at(std::string(json_field::JOIN_MAP_ID)))
+    });
+}
+
+}
 
 namespace json_loader {
 
@@ -128,5 +241,19 @@ Game LoadGame(const std::filesystem::path& json_path) {
    
     return game;
 }
+
+bool ReadJoinParamsFromString(http_handler::JoinParams& params, std::string str) {
+    // Распарсить строку как JSON, используя boost::json::parse
+    // Получаем json-объект из строки (тип value)
+    auto parsed_config_json = json::parse(str);
+    auto obj = parsed_config_json.as_object();
+
+    params.name   = value_to<std::string>(obj.at(std::string(json_field::JOIN_NAME)));
+    params.map_id = value_to<std::string>(obj.at(std::string(json_field::JOIN_MAP_ID)));
+
+    // По идее, должны обрабатывать ошибки парсинга. Пока не сделано
+    return true;
+}
+
 
 }  // namespace json_loader

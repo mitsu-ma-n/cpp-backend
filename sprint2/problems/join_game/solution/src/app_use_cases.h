@@ -56,6 +56,14 @@ public:
         : token_{token}
         , player_id_{player_id} {
     }
+
+    std::string GetTokenAsString() const {
+        return *token_;
+    }
+    std::string GetPlayerIdAsString() const {
+        return *player_id_;
+    }
+
 private:
     Token token_;
     Player::Id player_id_;
@@ -100,9 +108,9 @@ public:
     // Выдаёт список доступных карт 
     model::Game::Maps ListMaps();
     // Выдаёт ссылку на карту по её ID
-    const model::Map& FindMap(model::Map::Id map_id);
+    const model::Map& FindMap(std::string map_id);
     // Подключает игрока к указанной карте @todo: Какого игрока???
-    JoinGameResult JoinGame(model::Map::Id map_id);
+    JoinGameResult JoinGame(std::string user_name, std::string map_id);
 
 private:
     Players players_;

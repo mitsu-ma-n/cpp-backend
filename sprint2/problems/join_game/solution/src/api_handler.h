@@ -34,24 +34,34 @@ public:
     bool IsApiRequest(std::string_view target);
 
     // Обработчик запросов к АПИ - всегда возвращает ответ в виде строки. 
-    StringResponse HandleApiRequest(const StringRequest& req) const;
+    StringResponse HandleApiRequest(const StringRequest& req);
     const Strand& GetStrand();
 
 private:
     std::vector<std::string> GetSegmentsFromPath(boost::core::string_view s) const;
-    std::string GetPathFromUri(boost::core::string_view s);
+    std::string GetPathFromUri(boost::core::string_view s) const;
     // Функции обработки запросов к API
-    http::status GetApiResponse(std::string& response, const std::vector<std::string>& segments) const;
+    StringResponse GetMapsResponse(const StringRequest& req, const std::vector<std::string>& segments) const;
+    StringResponse GetGameResponse(const StringRequest& req, const std::vector<std::string>& segments);
+    StringResponse GetJoinResponse(const StringRequest& req, const std::vector<std::string>& segments);
+    StringResponse GetPlayersResponse(const StringRequest& req, const std::vector<std::string>& segments) const;
+
+    // Функции проверки доступа к элементам АПИ
+    bool isMapsRequest(const std::vector<std::string>& segments) const;
+    bool isGameRequest(const std::vector<std::string>&  segments) const;
+    bool isPlayersRequest(const std::vector<std::string>&  segments) const;
+    bool isJoinRequest(const std::vector<std::string>&  segments) const;
+
     http::status GetMaps(std::string& response, const std::vector<std::string>& segments) const;
     http::status GetMap(std::string& response, const std::vector<std::string>& segments) const;
+    http::status JoinGame(JoinParams params, std::string& response_body);
 
     // Создаёт StringResponse с заданными параметрами
     StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
-                                  bool keep_alive,
-                                  std::string_view content_type) const;
+                                  bool keep_alive, std::string_view content_type, std::string_view allowed_method) const;
 
     // Генератор сообщения об ошибке
-    StringResponse ReportServerError(unsigned version, bool keep_alive) const;
+    std::string GenerateErrorResponse(const std::string& code, const std::string& msg) const;
 
     Strand api_strand_;
     app::Application& app_;

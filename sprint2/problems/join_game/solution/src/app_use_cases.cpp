@@ -43,13 +43,12 @@ model::Game::Maps Application::ListMaps() {
     return list_maps_.GetMaps();
 }
 
-const model::Map& Application::FindMap(model::Map::Id map_id) {
-    return get_map_.GetMap(map_id);
+const model::Map& Application::FindMap(std::string map_id) {
+    return get_map_.GetMap(model::Map::Id(map_id));
 }
 
-JoinGameResult Application::JoinGame(model::Map::Id map_id) {
-    Player::Name user_name("XXX");
-    return join_game_.JoinGame(map_id, user_name);
+JoinGameResult Application::JoinGame(std::string user_name, std::string map_id) {
+    return join_game_.JoinGame(model::Map::Id(map_id), user_name);
 }
 
 
