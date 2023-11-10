@@ -198,7 +198,29 @@ namespace app {
 void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::JoinGameResult const& join_result) {
     json::object object;
     object[json_field::JOIN_TOKEN] = join_result.GetTokenAsString();
-    object[json_field::JOIN_PLAYER_ID] = join_result.GetPlayerIdAsString();
+    object[json_field::JOIN_PLAYER_ID] = join_result.GetPlayerId();
+    jv.emplace_object() = object;
+}
+
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerInfo const& player) {
+    json::object object_name;
+    object_name[json_field::LIST_PLAYERS_NAME] = player.GetNameAsString();
+    // Записываем сводную информацию
+    json::object object;
+    object[player.GetIdAsString().c_str()] = object_name;
+    jv.emplace_object() = object;
+}
+
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPlayersResult const& players_result) {
+    json::object object;
+
+    for (const auto& player_info : players_result) {
+        json::object object_name;
+        object_name[json_field::LIST_PLAYERS_NAME] = player_info.GetNameAsString();
+        // Записываем сводную информацию
+        object[player_info.GetIdAsString().c_str()] = object_name;
+    }
+
     jv.emplace_object() = object;
 }
 
@@ -251,7 +273,6 @@ bool ReadJoinParamsFromString(http_handler::JoinParams& params, std::string str)
     params.name   = value_to<std::string>(obj.at(std::string(json_field::JOIN_NAME)));
     params.map_id = value_to<std::string>(obj.at(std::string(json_field::JOIN_MAP_ID)));
 
-    // По идее, должны обрабатывать ошибки парсинга. Пока не сделано
     return true;
 }
 

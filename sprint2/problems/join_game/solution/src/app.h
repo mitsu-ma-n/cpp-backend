@@ -14,21 +14,26 @@ namespace app {
 ///  ---  Player  ---  ///
 class Player {
 public:
-    using Id = util::Tagged<std::string, Player>;
-    using Name = std::string;
+    using Id = util::Tagged<int, Player>;
+    using Name = util::Tagged<std::string, Player>;
 
     Player(Id id, model::Dog& dog, model::GameSession& session) noexcept
         : id_{id}
+        , name_(*dog.GetName())
         , dog_(&dog)
         , session_(&session) {
     }
 
-    Id GetId() {
+    Id GetId() const {
         return id_;
     }
 
-    Name GetName() {
+    Name GetName() const {
         return name_;
+    }
+
+    model::GameSession* GetSession() const {
+        return session_;
     }
 
 
@@ -93,21 +98,14 @@ public:
     // Добавляет нового игрока, который будет управлять собакой dog в игровой сессии session
     Player& Add(model::Dog* dog, model::GameSession& session);
     // Возврщает указатель на игрока, который управляет собакой dog на карте map
-    Player* FinByDogAndMapId(model::Dog dog, model::Map::Id map);
-/*
-    const Map* FindMap(const Map::Id& id) const noexcept {
-        if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
-            return &maps_.at(it->second);
-        }
-        return nullptr;
-    }
-*/
+    Player* FinByDog(model::Dog dog);
+
 private:
-    using TokenHasher = util::TaggedHasher<Token>;
-    using TokenToIndex = std::unordered_map<Token, size_t, TokenHasher>;
+    using NameHasher = util::TaggedHasher<model::Dog::Name>;
+    using NameToIndex = std::unordered_map<model::Dog::Name, size_t, NameHasher>;
 
     PlayersContainer players_;
-    TokenToIndex token_to_index_;
+    NameToIndex name_to_index_;
 };
 
 }  // namespace app

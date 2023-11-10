@@ -52,3 +52,8 @@ namespace HttpFildsValue {
     using namespace std::literals;
     constexpr static std::string_view NO_CACHE = "no-cache"sv;
 };
+
+namespace TokenParams {
+    using namespace std::literals;
+    constexpr static std::string_view START_STR = "Bearer "sv;
+}

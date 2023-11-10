@@ -38,13 +38,16 @@ public:
     const Strand& GetStrand();
 
 private:
+    // Вспомогательные функции
     std::vector<std::string> GetSegmentsFromPath(boost::core::string_view s) const;
     std::string GetPathFromUri(boost::core::string_view s) const;
+    std::string_view GetTokenFromRequestStr(std::string_view str);
+
     // Функции обработки запросов к API
     StringResponse GetMapsResponse(const StringRequest& req, const std::vector<std::string>& segments) const;
     StringResponse GetGameResponse(const StringRequest& req, const std::vector<std::string>& segments);
     StringResponse GetJoinResponse(const StringRequest& req, const std::vector<std::string>& segments);
-    StringResponse GetPlayersResponse(const StringRequest& req, const std::vector<std::string>& segments) const;
+    StringResponse GetPlayersResponse(const StringRequest& req, const std::vector<std::string>& segments);
 
     // Функции проверки доступа к элементам АПИ
     bool isMapsRequest(const std::vector<std::string>& segments) const;
@@ -55,6 +58,7 @@ private:
     http::status GetMaps(std::string& response, const std::vector<std::string>& segments) const;
     http::status GetMap(std::string& response, const std::vector<std::string>& segments) const;
     http::status JoinGame(JoinParams params, std::string& response_body);
+    http::status GetPlayers(std::string_view token, std::string& response_body);
 
     // Создаёт StringResponse с заданными параметрами
     StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,

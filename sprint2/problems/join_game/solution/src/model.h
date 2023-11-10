@@ -170,7 +170,7 @@ private:
 class Dog {
 public:
     using Id = util::Tagged<std::uint32_t, Dog>;
-    using Name = std::string;
+    using Name = util::Tagged<std::string, Dog>;
 
     Dog(Id id, Name name) noexcept
         : id_{std::move(id)}

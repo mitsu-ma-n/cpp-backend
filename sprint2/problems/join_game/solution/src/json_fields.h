@@ -45,6 +45,8 @@ namespace json_field {
     constexpr static char API_CODE_BAD_REQUEST[]      = "badRequest";
     constexpr static char API_CODE_INVALID_ARGUMENT[] = "invalidArgument";
     constexpr static char API_CODE_INVALID_METHOD[]   = "invalidMethod";
+    constexpr static char API_CODE_INVALID_TOKEN[]    = "invalidToken";
+    constexpr static char API_CODE_UNKNOWN_TOKEN[]    = "unknownToken";
     constexpr static char API_CODE_MAP_NOT_FOUND[]    = "mapNotFound";
     // JoinParams
     constexpr static char JOIN_NAME[]   = "userName";
@@ -52,4 +54,6 @@ namespace json_field {
     // JoinResult
     constexpr static char JOIN_TOKEN[]  = "authToken";
     constexpr static char JOIN_PLAYER_ID[]  = "playerId";
+    // ListPlayers
+    constexpr static char LIST_PLAYERS_NAME[]  = "name";
 }

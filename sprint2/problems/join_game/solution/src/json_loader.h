@@ -16,6 +16,8 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, std::vector
 
 namespace app {
 void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::JoinGameResult const& join_result);
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerInfo const& player);
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPlayersResult const& players_result);
 } // namespace app
 
 namespace json_loader {
