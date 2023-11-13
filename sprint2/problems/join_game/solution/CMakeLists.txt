@@ -39,6 +39,7 @@ add_executable(game_server
 	src/sdk.h
 	src/server_params.h
 	src/tagged.h
+	src/utils.h
 	src/write_adapter.h
 )
 

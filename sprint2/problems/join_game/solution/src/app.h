@@ -8,6 +8,7 @@
 
 #include "tagged.h"
 #include "model.h"
+#include "utils.h"
 
 namespace app {
 
@@ -69,7 +70,8 @@ public:
 private:
     Token GenerateToken() {
         std::stringstream ss;
-        ss << std::hex << generator1_() << generator2_();
+        utils::FormattedOutput formatted_out(ss, 16);
+        formatted_out << generator1_() << generator2_();
         return Token(ss.str());
     }
 
