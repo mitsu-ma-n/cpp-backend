@@ -49,6 +49,8 @@ JoinGameResult JoinGameUseCase::JoinGame(model::Map::Id map_id, Player::Name nam
     throw JoinGameError{JoinGameErrorReason::InvalidMap};
 }
 
+///  ---  ListPlayersUseCase  ---  ///
+
 // Подключает игрока с указанным именем (пса) к указанной карте
 ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
     ListPlayersResult res;

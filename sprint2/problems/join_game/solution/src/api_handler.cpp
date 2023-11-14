@@ -123,16 +123,13 @@ bool ApiHandler::isPlayersRequest(const std::vector<std::string>&  segments) con
 }
 
 StringResponse ApiHandler::GetPlayersResponse(const StringRequest& req, const std::vector<std::string>& segments) {
-    std::string req_target(req.target());
     std::string content_type(ContentType::APP_JSON);
     std::string response_body;
     http::status status;
     std::string_view allowed_method(AllowedMethods::PLAYERS);
-    StringResponse response;
 
     // Полуаем токен авторизации
     auto token = GetTokenFromRequestStr(req[http::field::authorization]);
-    //auto token = req[http::field::authorization];
     if (!token.empty()) {
         // Получаем список игроков в виде response_body для игрока с токеном token
         try {
@@ -140,11 +137,8 @@ StringResponse ApiHandler::GetPlayersResponse(const StringRequest& req, const st
         } catch (app::ListPlayersError err) {
             if(err.reason_ == app::ListPlayersErrorReason::InvalidToken) {
                 response_body = GenerateErrorResponse(json_field::API_CODE_UNKNOWN_TOKEN, "Player token has not been found");
-                status = http::status::bad_request;
+                status = http::status::unauthorized;
             }
-            //response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
-            response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
-            //return response;
         }
     } else {
         status = http::status::unauthorized;
@@ -164,9 +158,12 @@ StringResponse ApiHandler::GetPlayersResponse(const StringRequest& req, const st
         status = http::status::method_not_allowed;
         // Сгенерировать JSON с ошибкой
         response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_METHOD, "Invalid method"s);
+        response_size = response_body.size();   // Запоминаем размер
     }
 
-    return this->MakeStringResponse(status, response_body, response_size, req.version(), req.keep_alive(), content_type, allowed_method);
+    auto response = this->MakeStringResponse(status, response_body, response_size, req.version(), req.keep_alive(), content_type, allowed_method);
+    response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
+    return response;
 }
 
 std::string_view ApiHandler::GetTokenFromRequestStr(std::string_view str) {
@@ -191,7 +188,6 @@ StringResponse ApiHandler::GetJoinResponse(const StringRequest& req, const std::
     std::string content_type(ContentType::APP_JSON);
     std::string response_body;
     std::string_view allowed_method(AllowedMethods::JOIN);
-    StringResponse response;
 
     auto req_content_type = req[http::field::content_type];
     // Проверям корректность запроса (сразу извлекаем данные???)
@@ -210,9 +206,6 @@ StringResponse ApiHandler::GetJoinResponse(const StringRequest& req, const std::
     } catch (std::exception err) {
         response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_ARGUMENT, "Join game request parse error");
         status = http::status::bad_request;
-        //auto response = this->MakeStringResponse(http::status::bad_request, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
-        response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
-        //return response;
     } catch (app::JoinGameError err) {
         if(err.reason_ == app::JoinGameErrorReason::InvalidName) {
             response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_ARGUMENT, "Invalid name");
@@ -221,9 +214,6 @@ StringResponse ApiHandler::GetJoinResponse(const StringRequest& req, const std::
             response_body = GenerateErrorResponse(json_field::API_CODE_MAP_NOT_FOUND, "Map not found");
             status = http::status::not_found;
         }
-        //auto response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
-        response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
-        //return response;
     }
 
     // Сначала хотелось выделить следующий блок в отдельную функцию, но оказалось, что к разным веткам АПИ
@@ -235,7 +225,7 @@ StringResponse ApiHandler::GetJoinResponse(const StringRequest& req, const std::
         response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_METHOD, "Only POST method is expected"s);
     }
 
-    response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
+    auto response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
     response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
     return response;
 }
