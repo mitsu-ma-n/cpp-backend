@@ -13,7 +13,7 @@
 #include "request_handler.h"
 #include "model.h"
 #include "logger.h"
-#include "logging_request_handler.h"
+#include "request_handler_logging.h"
 #include "json_fields.h"
 #include "app_use_cases.h"
 

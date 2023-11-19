@@ -11,37 +11,39 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
-	src/api_handler.cpp
-	src/api_handler.h
-	src/app.cpp
-	src/app.h
-	src/app_use_cases.cpp
-	src/app_use_cases.h
-	src/boost_json.cpp
-	src/file_handler.cpp
-	src/file_handler.h
-	src/http_handler_defs.h
-	src/http_handler_types.cpp
-	src/http_handler_types.h
-	src/http_server.cpp
-	src/http_server.h
-	src/json_fields.h
-	src/json_loader.cpp
-	src/json_loader.h
-	src/logger.cpp
-	src/logger.h
-	src/logging_request_handler.h
+	src/app/app_use_cases.cpp
+	src/app/app_use_cases.h
+	src/app/app.cpp
+	src/app/app.h
+	src/http/api_handler.cpp
+	src/http/api_handler.h
+	src/http/file_handler.cpp
+	src/http/file_handler.h
+	src/http/http_handler_defs.h
+	src/http/http_handler_types.cpp
+	src/http/http_handler_types.h
+	src/http/http_server.cpp
+	src/http/http_server.h
+	src/http/request_handler_logging.h
+	src/http/request_handler.cpp
+	src/http/request_handler.h
+	src/model/model.cpp
+	src/model/model.h
+	src/utils/boost_json.cpp
+	src/utils/json_fields.h
+	src/utils/json_loader.cpp
+	src/utils/json_loader.h
+	src/utils/logger.cpp
+	src/utils/logger.h
+	src/utils/tagged.h
+	src/utils/utils.h
+	src/utils/write_adapter.h
 	src/main.cpp
-	src/model.cpp
-	src/model.h
-	src/request_handler.cpp
-	src/request_handler.h
 	src/sdk.h
 	src/server_params.h
-	src/tagged.h
-	src/utils.h
-	src/write_adapter.h
 )
+
+target_include_directories(game_server PRIVATE src src/app src/http src/model src/utils)
 
 # используем "импортированную" цель CONAN_PKG::boost
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)

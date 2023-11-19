@@ -139,6 +139,9 @@ StringResponse ApiHandler::GetPlayersResponse(const StringRequest& req, const st
                 response_body = GenerateErrorResponse(json_field::API_CODE_UNKNOWN_TOKEN, "Player token has not been found");
                 status = http::status::unauthorized;
             }
+        } catch (...) {
+            response_body = GenerateErrorResponse(json_field::API_CODE_UNKNOWN_TOKEN, "Unknown error");
+            status = http::status::bad_request;
         }
     } else {
         status = http::status::unauthorized;

@@ -11,7 +11,7 @@ Player* PlayerTokens::FindPlayerByToken(Token token) {
     if ( auto it = token_to_player.find(token); it != token_to_player.end() ) {
         return token_to_player[token];
     }
-    return nullptr;;
+    return nullptr;
 }
 
 Token PlayerTokens::AddPlayer(Player& player) {
