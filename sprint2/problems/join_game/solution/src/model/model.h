@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -192,10 +193,16 @@ private:
 
 class GameSession {
 public:
-    using Dogs = std::vector<Dog>;
+    using Dogs = std::vector<Dog*>;
 
     GameSession(const Map& map) noexcept
         : map_{&map} {
+    }
+
+    ~GameSession() {
+        for (auto dog : dogs_) {
+            delete dog;
+        }
     }
 
     Dog* AddDog(Point pos, Dog::Name name);
@@ -206,7 +213,7 @@ public:
 
     const Dog* FindDog(const Dog::Id& id) const noexcept {
         if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
-            return &dogs_.at(it->second);
+            return dogs_.at(it->second);
         }
         return nullptr;
     }
@@ -223,6 +230,12 @@ private:
 class Game {
 public:
     using Maps = std::vector<Map>;
+
+    ~Game() {
+        for (auto session : sessions_) {
+            delete session;
+        }
+    }
 
     void AddMap(Map map);
     GameSession* CreateSession(Map::Id map_id);
@@ -245,7 +258,7 @@ public:
         // Для этого нужно будет добавить критерий "переполнения" сессии и создания новой, например, по количеству 
         // игроков в текущей найденной сессии
         if (auto it = map_id_to_session_index_.find(id); it != map_id_to_session_index_.end()) {
-            return &sessions_.at(it->second);
+            return sessions_.at(it->second);
         } else {
             // Если не нашли сессию для игрока, пробуем создать новую
             return CreateSession(id);
@@ -259,7 +272,7 @@ private:
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_map_index_;
 
-    std::vector<GameSession> sessions_;
+    std::vector<GameSession*> sessions_;
     MapIdToIndex map_id_to_session_index_;
 };
 

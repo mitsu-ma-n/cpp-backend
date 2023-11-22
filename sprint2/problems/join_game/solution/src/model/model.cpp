@@ -23,19 +23,22 @@ void Map::AddOffice(Office office) {
 
 Dog* GameSession::AddDog(Point pos, Dog::Name name) {
     const size_t index = dogs_.size();  // Получаем незанятый индекс
-    model::Dog dog{model::Dog::Id(index),name}; // Создаём на основе индекса и имени экземпляр собаки
+    // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
     // Пробуем добавить
-    if (auto [it, inserted] = dog_id_to_index_.emplace(dog.GetId(), index); !inserted) {
-        throw std::invalid_argument("Dog with id "s + std::to_string(*dog.GetId()) + " already exists"s);
+    if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
+        throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
+        // Создаём на основе индекса и имени экземпляр собаки
+        Dog* new_dog = new Dog(model::Dog::Id(index),name);
         try {
-            dogs_.emplace_back(std::move(dog));
+            dogs_.emplace_back(new_dog);
         } catch (...) {
             dog_id_to_index_.erase(it);
+            delete new_dog;
             throw;
         }
     }
-    return &dogs_[index];
+    return dogs_[index];
 }
 
 void Game::AddMap(Map map) {
@@ -65,16 +68,18 @@ GameSession* Game::CreateSession(Map::Id map_id) {
         // Сессия есть для карты с таким Id. Заново создавать нельзя!
         throw std::invalid_argument("Session for map with id "s + *map_id + " already exists"s);
     } else {
+        // Создаём новую сессию, привязанную к указанной карте
+        GameSession* new_session = new GameSession(*map);
         try {
-            // Создаём новую сессию, привязанную к указанной карте
-            sessions_.emplace_back(std::move(GameSession{*map}));
-            return &sessions_.back();
+            sessions_.emplace_back(new_session);
         } catch (...) {
             // Не получилось. Откатываем изменения в map_id_to_map_index_
             map_id_to_session_index_.erase(it);
+            delete new_session;
             throw;
         }
     }
+    return sessions_.back();
 }
 
 }  // namespace model

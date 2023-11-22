@@ -34,7 +34,7 @@ JoinGameResult JoinGameUseCase::JoinGame(model::Map::Id map_id, Player::Name nam
         throw JoinGameError{JoinGameErrorReason::InvalidMap};
     }
     
-    if ( auto* session = game_->FindSession(model::Map::Id{map_id}) ) {
+    if ( auto session = game_->FindSession(model::Map::Id{map_id}) ) {
         auto spawn_point = GetRandomPointOnMap();
         try {
             auto dog = session->AddDog(spawn_point, std::move(name_str));
@@ -51,7 +51,7 @@ JoinGameResult JoinGameUseCase::JoinGame(model::Map::Id map_id, Player::Name nam
 
 ///  ---  ListPlayersUseCase  ---  ///
 
-// Подключает игрока с указанным именем (пса) к указанной карте
+// Для игрока с указанным токеном выдаёт список игроков, которые находятся вместе с ним в одной сессии
 ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
     ListPlayersResult res;
     // Получаем игрока с заданным токеном
@@ -61,9 +61,9 @@ ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
         auto dogs = session->GetDogs();;
 
         // Для каждой собаки находим игрока и складываем в результат
-        for ( const auto& dog : dogs ) {
-            auto dog_name = dog.GetName();
-            auto player = players_->FinByDog(dog);
+        for ( auto dog : dogs ) {
+            auto dog_name = dog->GetName();
+            auto player = players_->FinByDog(*dog);
             res.push_back({player->GetId(), player->GetName()});
         }
     } else {

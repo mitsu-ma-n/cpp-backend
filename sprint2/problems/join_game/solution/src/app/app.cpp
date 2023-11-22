@@ -34,13 +34,15 @@ Player& Players::Add(model::Dog* dog, model::GameSession& session) {
         // Игрок с таким именем уже есть
         throw std::invalid_argument("Name "s + *name + " already exists"s);
     } else {
+        Player* new_player = new Player(id, *dog, session);
         try {
             // Добавляем игрока
-            players_.emplace_back(id, *dog, session);
-            return players_.back();
+            players_.emplace_back(new_player);
+            return *players_.back();
         } catch (...) {
             // Не получилось. Откатываем изменения в name_to_index_
             name_to_index_.erase(it);
+            delete new_player;
             throw;
         }
     }
@@ -49,7 +51,7 @@ Player& Players::Add(model::Dog* dog, model::GameSession& session) {
 Player* Players::FinByDog(model::Dog dog) {
     auto name = dog.GetName();
     if (auto it = name_to_index_.find(name); it != name_to_index_.end()) {
-        return &players_.at(it->second);
+        return players_.at(it->second);
     }
 
     return nullptr;

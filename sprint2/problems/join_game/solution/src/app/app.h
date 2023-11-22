@@ -95,7 +95,13 @@ private:
 ///  ---  Players  ---  ///
 class Players {
 public:
-    using PlayersContainer = std::vector<Player>;
+    using PlayersContainer = std::vector<Player*>;
+
+    ~Players() {
+        for (auto player : players_) {
+            delete player;
+        }
+    }
 
     // Добавляет нового игрока, который будет управлять собакой dog в игровой сессии session
     Player& Add(model::Dog* dog, model::GameSession& session);
