@@ -1,7 +1,7 @@
 #pragma once
 
 #include "model.h"
-#include "app.h"
+#include "players.h"
 #include <string>
 
 namespace app {
@@ -42,7 +42,7 @@ private:
 
 
 ///  ---  JoinGameUseCase  ---  ///
-enum JoinGameErrorReason {
+enum class JoinGameErrorReason {
     InvalidName,
     InvalidMap
 };
@@ -88,7 +88,7 @@ private:
 };
 
 ///  ---  ListPlayers  ---  ///
-enum ListPlayersErrorReason {
+enum class ListPlayersErrorReason {
     InvalidToken
 };
 
@@ -131,33 +131,45 @@ private:
     Players* players_;
 };
 
-///  ---  Application  ---  ///
-class Application {
-public:
-    Application(model::Game& game)
-    : join_game_{game, tokens_, players_}
-    , list_players_{tokens_, players_}
-    , list_maps_{game}
-    , get_map_{game} {
+///  ---  GetState  ---  ///
+enum class GetStateErrorReason {
+    InvalidToken
+};
 
+struct GetStateError {
+    GetStateErrorReason reason_;
+};
+
+class StatePlayerInfo {
+public:
+    StatePlayerInfo(Player::Id id, model::Dog& dog) 
+        : id_{id}
+        , dog_{dog} {
     }
 
-    // Выдаёт список доступных карт 
-    model::Game::Maps ListMaps();
-    // Выдаёт ссылку на карту по её ID
-    const model::Map& FindMap(std::string map_id);
-    // Подключает игрока к указанной карте @todo: Какого игрока???
-    JoinGameResult JoinGame(std::string user_name, std::string map_id);
-    // Подключает игрока к указанной карте @todo: Какого игрока???
-    ListPlayersResult GetPlayers(std::string_view token);
+    std::string GetIdAsString() const {
+        return std::to_string(*id_);
+    }
 
 private:
-    Players players_;
-    PlayerTokens tokens_;
-    JoinGameUseCase join_game_;
-    ListPlayersUseCase list_players_;
-    ListMapsUseCase list_maps_;
-    GetMapUseCase get_map_;
+    Player::Id id_;
+    model::Dog dog_;
+};
+
+using GetStateResult = std::vector<StatePlayerInfo>;
+
+class GetStateUseCase {
+public:
+    GetStateUseCase(PlayerTokens& player_tokens, Players& players)
+    : player_tokens_{&player_tokens}
+    , players_{&players} {}
+
+    // Подключает игрока с указанным именем (пса) к указанной карте
+    GetStateResult GetState(Token token);
+
+private:
+    PlayerTokens* player_tokens_;
+    Players* players_;
 };
 
 }  // namespace app

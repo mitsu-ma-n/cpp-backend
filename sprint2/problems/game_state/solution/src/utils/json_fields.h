@@ -2,8 +2,10 @@
 
 namespace json_field {
     // Game
-    constexpr static char GAME_MAPS[] = "maps";
+    constexpr static char GAME_DEFAULT_DOG_SPEED[] = "defaultDogSpeed";
+    constexpr static char GAME_MAPS[]              = "maps";
     // Map
+    constexpr static char MAP_DOG_SPEED[]   = "dogSpeed";
     constexpr static char MAP_ID[]          = "id";
     constexpr static char MAP_NAME[]        = "name";
     constexpr static char MAP_ROADS[]       = "roads";
@@ -56,4 +58,6 @@ namespace json_field {
     constexpr static char JOIN_PLAYER_ID[]  = "playerId";
     // ListPlayers
     constexpr static char LIST_PLAYERS_NAME[]  = "name";
+    // GetState
+    constexpr static char GET_STATE_PLAYERS[]  = "players";
 }

@@ -111,6 +111,8 @@ StringResponse ApiHandler::GetGameResponse(const StringRequest& req, const std::
         return GetPlayersResponse(req, segments);
     } else if ( isJoinRequest(segments) ) {
         return GetJoinResponse(req, segments);
+    } else if ( isStateRequest(segments) ) {
+        return GetStateResponse(req, segments);
     }
     // Неизвестная цель запроса
     auto body = GenerateErrorResponse(json_field::API_CODE_BAD_REQUEST, "Bad request to the game");
@@ -235,6 +237,63 @@ StringResponse ApiHandler::GetJoinResponse(const StringRequest& req, const std::
 
 http::status ApiHandler::JoinGame(JoinParams params, std::string& response_body) {
     app::JoinGameResult res = app_.JoinGame(params.name, params.map_id);
+    response_body = boost::json::serialize(json::value_from(res));
+    return http::status::ok;
+}
+
+bool ApiHandler::isStateRequest(const std::vector<std::string>&  segments) const {
+    return segments[api_strings::ACTION_POS] == api_strings::STATE_PATH;
+}
+
+StringResponse ApiHandler::GetStateResponse(const StringRequest& req, const std::vector<std::string>& segments) {
+    std::string content_type(ContentType::APP_JSON);
+    std::string response_body;
+    http::status status;
+    std::string_view allowed_method(AllowedMethods::STATE);
+
+    // Полуаем токен авторизации
+    auto token = GetTokenFromRequestStr(req[http::field::authorization]);
+    if (!token.empty()) {
+        // Получаем список игроков в виде response_body для игрока с токеном token
+        try {
+            status = GetState(token, response_body);
+        } catch (app::GetStateError err) {
+            if(err.reason_ == app::GetStateErrorReason::InvalidToken) {
+                response_body = GenerateErrorResponse(json_field::API_CODE_UNKNOWN_TOKEN, "Player token has not been found");
+                status = http::status::unauthorized;
+            }
+        } catch (...) {
+            response_body = GenerateErrorResponse(json_field::API_CODE_UNKNOWN_TOKEN, "Unknown error");
+            status = http::status::bad_request;
+        }
+    } else {
+        status = http::status::unauthorized;
+        response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_TOKEN, "Authorization header is missing"s);
+    }
+
+    // Сначала хотелось выделить следующий блок в отдельную функцию, но оказалось, что к разным веткам АПИ
+    // допустимы разные методы запросов. Поэтому обрабатывать метод нужно в каждой ветке отдельно
+    int response_size = 0;
+    auto req_method = req.method();
+    if (req_method == http::verb::get) {
+        response_size = response_body.size();
+    } else if (req_method == http::verb::head) {
+        response_size = response_body.size();   // Запоминаем размер
+        response_body = ""s;    // Зачищаем тело запроса
+    } else {    // Недопустимый метод
+        status = http::status::method_not_allowed;
+        // Сгенерировать JSON с ошибкой
+        response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_METHOD, "Invalid method"s);
+        response_size = response_body.size();   // Запоминаем размер
+    }
+
+    auto response = this->MakeStringResponse(status, response_body, response_size, req.version(), req.keep_alive(), content_type, allowed_method);
+    response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
+    return response;
+}
+
+http::status ApiHandler::GetState(std::string_view token, std::string& response_body) {
+    app::GetStateResult res = app_.GetState(token);
     response_body = boost::json::serialize(json::value_from(res));
     return http::status::ok;
 }

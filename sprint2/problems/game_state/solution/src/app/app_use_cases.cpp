@@ -73,23 +73,28 @@ ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
     return res;
 }
 
-///  ---  Application  ---  ///
+///  ---  ListPlayersUseCase  ---  ///
 
-model::Game::Maps Application::ListMaps() {
-    return list_maps_.GetMaps();
+// Для игрока с указанным токеном выдаёт список игроков, которые находятся вместе с ним в одной сессии
+GetStateResult GetStateUseCase::GetState(Token token) {
+    GetStateResult res;
+    // Получаем игрока с заданным токеном
+    if ( auto self_player = player_tokens_->FindPlayerByToken(token) ) {
+        // Получаем сессию, к которой подключен игрок и список собак в сессии
+        auto session = self_player->GetSession();
+        auto dogs = session->GetDogs();;
+
+        // Для каждой собаки находим игрока и складываем в результат
+        for ( auto dog : dogs ) {
+            auto dog_name = dog->GetName();
+            auto player = players_->FinByDog(*dog);
+            res.push_back({player->GetId(), *dog});
+        }
+    } else {
+        throw GetStateError{GetStateErrorReason::InvalidToken};
+    }
+
+    return res;
 }
-
-const model::Map& Application::FindMap(std::string map_id) {
-    return get_map_.GetMap(model::Map::Id(map_id));
-}
-
-JoinGameResult Application::JoinGame(std::string user_name, std::string map_id) {
-    return join_game_.JoinGame(model::Map::Id{map_id}, Player::Name{user_name});
-}
-
-ListPlayersResult Application::GetPlayers(std::string_view token) {
-    return list_players_.GetPlayers(app::Token(std::string(token)));
-}
-
 
 }  // namespace app

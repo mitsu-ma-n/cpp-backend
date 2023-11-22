@@ -8,6 +8,17 @@
 
 namespace model {
 
+using DynamicDimension = double;
+using DynamicCoord = DynamicDimension;
+
+struct Position {
+    DynamicCoord x, y;
+};
+
+struct Speed {
+    DynamicDimension ux, uy;
+};
+
 using Dimension = int;
 using Coord = Dimension;
 
@@ -121,9 +132,10 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name) noexcept
+    Map(Id id, std::string name, DynamicDimension dogSpeed = 1.0) noexcept
         : id_(std::move(id))
-        , name_(std::move(name)) {
+        , name_(std::move(name))
+        , dogSpeed_(dogSpeed) {
     }
 
     const Id& GetId() const noexcept {
@@ -156,6 +168,9 @@ public:
 
     void AddOffice(Office office);
 
+public:
+    DynamicDimension dogSpeed_;
+
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
@@ -186,9 +201,19 @@ public:
         return name_;
     }
 
+    enum class Direction {
+        NORTH = 'U',
+        SOUTH = 'D',
+        WEST = 'L',
+        EAST = 'R'
+    };
+
 private:
     Id id_;
     Name name_;
+    Position position_;
+    Speed speed_;
+    Direction direction_;
 };
 
 class GameSession {
@@ -231,6 +256,10 @@ class Game {
 public:
     using Maps = std::vector<Map>;
 
+    Game(DynamicDimension dogSpeed = 1.0) noexcept
+        : defuaultDogSpeed_{dogSpeed} {
+    }
+
     ~Game() {
         for (auto session : sessions_) {
             delete session;
@@ -264,6 +293,9 @@ public:
             return CreateSession(id);
         }
     }
+
+public:
+    DynamicDimension defuaultDogSpeed_;
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;

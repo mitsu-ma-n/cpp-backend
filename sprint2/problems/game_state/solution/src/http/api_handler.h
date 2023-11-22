@@ -6,7 +6,7 @@
 #include "http_server.h"
 #include "model.h"
 #include "http_handler_types.h"
-#include "app_use_cases.h"
+#include "app.h"
 
 #include <iostream>
 #include <filesystem>
@@ -48,17 +48,20 @@ private:
     StringResponse GetGameResponse(const StringRequest& req, const std::vector<std::string>& segments);
     StringResponse GetJoinResponse(const StringRequest& req, const std::vector<std::string>& segments);
     StringResponse GetPlayersResponse(const StringRequest& req, const std::vector<std::string>& segments);
+    StringResponse GetStateResponse(const StringRequest& req, const std::vector<std::string>& segments);
 
     // Функции проверки доступа к элементам АПИ
     bool isMapsRequest(const std::vector<std::string>& segments) const;
     bool isGameRequest(const std::vector<std::string>&  segments) const;
     bool isPlayersRequest(const std::vector<std::string>&  segments) const;
     bool isJoinRequest(const std::vector<std::string>&  segments) const;
+    bool isStateRequest(const std::vector<std::string>&  segments) const;
 
     http::status GetMaps(std::string& response, const std::vector<std::string>& segments) const;
     http::status GetMap(std::string& response, const std::vector<std::string>& segments) const;
     http::status JoinGame(JoinParams params, std::string& response_body);
     http::status GetPlayers(std::string_view token, std::string& response_body);
+    http::status GetState(std::string_view token, std::string& response_body);
 
     // Создаёт StringResponse с заданными параметрами
     StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,

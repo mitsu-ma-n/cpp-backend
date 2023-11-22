@@ -95,6 +95,10 @@ Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
         value_to<std::string>(obj.at(std::string(json_field::MAP_NAME)))
     };
 
+    if( auto it = obj.find(json_field::MAP_DOG_SPEED); it != obj.end() ) {
+        map.dogSpeed_ = value_to<double>(it->value());
+    }
+
     AddRoads(map,obj);
     AddBuildings(map,obj);
     AddOffices(map,obj);
@@ -224,6 +228,19 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPl
     jv.emplace_object() = object;
 }
 
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetStateResult const& state_result) {
+    json::object object_players;    // Сводная информация об игроках свойство-объект
+
+    json::object object_players_info;   // Объект информации об игроках
+    for (const auto& player_info : state_result) {
+        object_players_info[player_info.GetIdAsString()] = player_info.GetIdAsString();
+    }
+
+    object_players[json_field::GET_STATE_PLAYERS] = object_players_info;
+
+    jv.emplace_object() = object_players;
+}
+
 } // namespace app
 
 
@@ -254,6 +271,8 @@ Game LoadGame(const std::filesystem::path& json_path) {
     // Получаем json-объект из строки (тип value)
     auto parsed_config_json = json::parse(input);
     auto obj = parsed_config_json.as_object();
+
+    game.defuaultDogSpeed_ = value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED)));
 
     // Добавляем карты в игру
     auto maps = value_to<std::vector<Map>>(obj.at(std::string(json_field::GAME_MAPS)));
