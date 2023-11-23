@@ -2,7 +2,10 @@
 
 #include "model.h"
 #include "players.h"
-#include "app_use_cases.h"
+#include "join_use_case.h"
+#include "players_use_case.h"
+#include "state_use_case.h"
+#include "maps_use_case.h"
 #include <string>
 
 namespace app {
@@ -10,12 +13,11 @@ namespace app {
 class Application {
 public:
     Application(model::Game& game)
-    : join_game_{game, tokens_, players_}
-    , list_players_{tokens_, players_}
-    , game_state_{tokens_, players_}
-    , list_maps_{game}
-    , get_map_{game} {
-
+        : join_game_{game, tokens_, players_}
+        , list_players_{tokens_, players_}
+        , game_state_{tokens_, players_}
+        , list_maps_{game}
+        , get_map_{game} {
     }
 
     // Выдаёт список доступных карт 

@@ -15,7 +15,7 @@
 #include "logger.h"
 #include "request_handler_logging.h"
 #include "json_fields.h"
-#include "app_use_cases.h"
+#include "app.h"
 
 using namespace std::literals;
 namespace net = boost::asio;

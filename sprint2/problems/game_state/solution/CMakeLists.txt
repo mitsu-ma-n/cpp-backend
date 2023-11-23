@@ -11,12 +11,18 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
-	src/app/app_use_cases.cpp
-	src/app/app_use_cases.h
 	src/app/app.cpp
 	src/app/app.h
+	src/app/join_use_case.cpp
+	src/app/join_use_case.h
+	src/app/maps_use_case.cpp
+	src/app/maps_use_case.h
+	src/app/players_use_case.cpp
+	src/app/players_use_case.h
 	src/app/players.cpp
 	src/app/players.h
+	src/app/state_use_case.cpp
+	src/app/state_use_case.h
 	src/http/api_handler.cpp
 	src/http/api_handler.h
 	src/http/file_handler.cpp

@@ -1,14 +1,15 @@
 #pragma once
+
+#include "tagged.h"
+#include "model.h"
+#include "utils.h"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <random>
 #include <sstream>
 #include <iostream>
-
-#include "tagged.h"
-#include "model.h"
-#include "utils.h"
 
 namespace app {
 

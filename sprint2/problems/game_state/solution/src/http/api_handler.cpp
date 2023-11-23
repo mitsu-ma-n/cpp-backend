@@ -1,6 +1,10 @@
 #include "api_handler.h"
 
-#include "app_use_cases.h"
+#include "join_use_case.h"
+#include "players_use_case.h"
+#include "state_use_case.h"
+#include "maps_use_case.h"
+
 #include "boost/beast/http/status.hpp"
 #include <boost/beast/http/file_body.hpp>
 #include <boost/json.hpp>
