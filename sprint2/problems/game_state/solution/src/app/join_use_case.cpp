@@ -1,4 +1,6 @@
 #include "join_use_case.h"
+#include "model.h"
+#include <cstddef>
 #include <stdexcept>
 
 namespace app {
@@ -10,8 +12,26 @@ bool isValidName(Player::Name name) {
 }
 
 // Получение произвольной точки на дорогах карты
-model::Point GetRandomPointOnMap() {
-    return model::Point{0,0};
+model::Position GetRandomPointOnMap(const model::Map& map) {
+    auto roads = map.GetRoads();
+    // Выбираем случайную дорогу
+    size_t road_index = utils::my_random::GetRandomIndex(0, roads.size()-1);
+    model::Road& road = roads[road_index];
+
+    // Выбираем случайную точку на дороге
+    model::Point start = road.GetStart();
+    model::Point end = road.GetEnd();
+
+    model::Position res;
+    if ( road.IsHorizontal() ) {
+        res.y = start.y;
+        res.x = utils::my_random::GetRandomDouble(start.x, end.x);
+    } else {
+        res.x = start.x;
+        res.y = utils::my_random::GetRandomDouble(start.y, end.y);
+    }
+
+    return res;
 }
 
 JoinGameUseCase::JoinGameUseCase(model::Game& game, PlayerTokens& player_tokens, Players& players) 
@@ -27,12 +47,13 @@ JoinGameResult JoinGameUseCase::JoinGame(model::Map::Id map_id, Player::Name nam
         throw JoinGameError{JoinGameErrorReason::InvalidName};
     }
 
-    if ( !game_->FindMap(map_id) ) {
+    auto map = game_->FindMap(map_id);
+    if ( !map ) {
         throw JoinGameError{JoinGameErrorReason::InvalidMap};
     }
     
     if ( auto session = game_->FindSession(model::Map::Id{map_id}) ) {
-        auto spawn_point = GetRandomPointOnMap();
+        auto spawn_point = GetRandomPointOnMap(*map);
         try {
             auto dog = session->AddDog(spawn_point, std::move(name_str));
             auto& player = players_->Add(dog, *session);

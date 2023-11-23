@@ -4,6 +4,7 @@
 #include "api_handler.h"
 #include "boost/json/value_to.hpp"
 // Позволяет загрузить содержимое файла в виде строки:
+#include <boost/json/value_from.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 #include <iostream>
@@ -153,6 +154,30 @@ void tag_invoke(json::value_from_tag, json::value& jv, Road const& road)
     }
 }
 
+// сериализация экземпляра класса Speed в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Position const& pos)
+{
+    json::array res = {pos.x, pos.y};
+    jv = res;
+}
+
+// сериализация экземпляра класса Speed в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Speed const& speed)
+{
+    json::array res = {speed.ux, speed.uy};
+    jv = res;
+}
+
+// сериализация экземпляра класса Dog в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, Dog const& dog)
+{
+    jv = {
+        {json_field::DOG_POSITION, json::value_from(dog.GetPosition())},
+        {json_field::DOG_SPEED, json::value_from(dog.GetSpeed())},
+        {json_field::DOG_DIRECTION, dog.GetDirectionAsString()}
+    };
+}
+
 // сериализация экземпляра класса Map в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
 {
@@ -233,7 +258,7 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetSta
 
     json::object object_players_info;   // Объект информации об игроках
     for (const auto& player_info : state_result) {
-        object_players_info[player_info.GetIdAsString()] = player_info.GetIdAsString();
+        object_players_info[player_info.GetIdAsString()] = json::value_from(player_info.GetDog());
     }
 
     object_players[json_field::GET_STATE_PLAYERS] = object_players_info;

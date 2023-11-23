@@ -44,6 +44,7 @@ add_executable(game_server
 	src/utils/logger.cpp
 	src/utils/logger.h
 	src/utils/tagged.h
+	src/utils/utils.cpp
 	src/utils/utils.h
 	src/utils/write_adapter.h
 	src/main.cpp

@@ -11,6 +11,10 @@ namespace json_field {
     constexpr static char MAP_ROADS[]       = "roads";
     constexpr static char MAP_BUILDINGS[]   = "buildings";
     constexpr static char MAP_OFFICES[]     = "offices";
+    // Dog
+    constexpr static char DOG_POSITION[]  = "pos";
+    constexpr static char DOG_SPEED[]     = "speed";
+    constexpr static char DOG_DIRECTION[] = "dir";
     // Road
     constexpr static char ROAD_START_X[] = "x0";
     constexpr static char ROAD_START_Y[] = "y0";

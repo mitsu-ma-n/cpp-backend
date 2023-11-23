@@ -25,6 +25,11 @@ public:
         return std::to_string(*id_);
     }
 
+    const model::Dog& GetDog() const {
+        return dog_;
+    }
+
+
 private:
     Player::Id id_;
     model::Dog dog_;

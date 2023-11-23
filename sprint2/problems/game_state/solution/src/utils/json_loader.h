@@ -12,6 +12,9 @@ namespace model {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Office const& office);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Building const& building);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Road const& road);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Position const& pos);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Speed const& speed);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Dog const& dog);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Map const& map);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, std::vector<Map> const& maps);
 } // namespace model

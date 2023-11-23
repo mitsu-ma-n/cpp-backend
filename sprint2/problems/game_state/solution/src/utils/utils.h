@@ -35,4 +35,13 @@ class FormattedOutput
         }
 };
 
+namespace my_random {
+    double GetRandomDouble(double min, double max);
+    size_t GetRandomIndex(size_t min, size_t max);
+}
+
+namespace validators {
+    bool IsValidToken(const std::string_view& token);
+}
+
 }

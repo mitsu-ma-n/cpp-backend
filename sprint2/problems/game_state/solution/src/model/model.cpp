@@ -21,7 +21,7 @@ void Map::AddOffice(Office office) {
     }
 }
 
-Dog* GameSession::AddDog(Point pos, Dog::Name name) {
+Dog* GameSession::AddDog(Position pos, Dog::Name name) {
     const size_t index = dogs_.size();  // Получаем незанятый индекс
     // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
     // Пробуем добавить
@@ -29,7 +29,7 @@ Dog* GameSession::AddDog(Point pos, Dog::Name name) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
         // Создаём на основе индекса и имени экземпляр собаки
-        Dog* new_dog = new Dog(model::Dog::Id(index),name);
+        Dog* new_dog = new Dog(model::Dog::Id(index), name, pos);
         try {
             dogs_.emplace_back(new_dog);
         } catch (...) {

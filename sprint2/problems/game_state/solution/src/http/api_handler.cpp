@@ -136,7 +136,7 @@ StringResponse ApiHandler::GetPlayersResponse(const StringRequest& req, const st
 
     // Полуаем токен авторизации
     auto token = GetTokenFromRequestStr(req[http::field::authorization]);
-    if (!token.empty()) {
+    if (!utils::validators::IsValidToken(token)) {
         // Получаем список игроков в виде response_body для игрока с токеном token
         try {
             status = GetPlayers(token, response_body);
@@ -257,7 +257,7 @@ StringResponse ApiHandler::GetStateResponse(const StringRequest& req, const std:
 
     // Полуаем токен авторизации
     auto token = GetTokenFromRequestStr(req[http::field::authorization]);
-    if (!token.empty()) {
+    if (!utils::validators::IsValidToken(token)) {
         // Получаем список игроков в виде response_body для игрока с токеном token
         try {
             status = GetState(token, response_body);

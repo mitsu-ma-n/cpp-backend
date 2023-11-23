@@ -183,14 +183,24 @@ private:
     Offices offices_;
 };
 
+enum class Direction {
+    NORTH = 'U',
+    SOUTH = 'D',
+    WEST = 'L',
+    EAST = 'R'
+};
+
 class Dog {
 public:
     using Id = util::Tagged<std::uint32_t, Dog>;
     using Name = util::Tagged<std::string, Dog>;
 
-    Dog(Id id, Name name) noexcept
+    Dog(Id id, Name name, Position position = {0.0, 0.0}, Speed speed = {0.0, 0.0}, Direction direction = Direction::NORTH ) noexcept
         : id_{std::move(id)}
-        , name_{std::move(name)} {
+        , name_{std::move(name)}
+        , position_{position}
+        , speed_{speed}
+        , direction_{direction} {
     }
 
     const Id& GetId() const noexcept {
@@ -201,12 +211,17 @@ public:
         return name_;
     }
 
-    enum class Direction {
-        NORTH = 'U',
-        SOUTH = 'D',
-        WEST = 'L',
-        EAST = 'R'
-    };
+    const Position& GetPosition() const noexcept {
+        return position_;
+    }
+
+    const Speed& GetSpeed() const noexcept {
+        return speed_;
+    }
+
+    std::string GetDirectionAsString() const noexcept {
+        return {(char)direction_};
+    }
 
 private:
     Id id_;
@@ -230,7 +245,7 @@ public:
         }
     }
 
-    Dog* AddDog(Point pos, Dog::Name name);
+    Dog* AddDog(Position pos, Dog::Name name);
 
     const Dogs& GetDogs() const noexcept {
         return dogs_;
