@@ -6,6 +6,7 @@
 #include "players_use_case.h"
 #include "state_use_case.h"
 #include "maps_use_case.h"
+#include "player_use_case.h"
 #include <string>
 
 namespace app {
@@ -16,6 +17,7 @@ public:
         : join_game_{game, tokens_, players_}
         , list_players_{tokens_, players_}
         , game_state_{tokens_, players_}
+        , player_action_{tokens_}
         , list_maps_{game}
         , get_map_{game} {
     }
@@ -30,6 +32,8 @@ public:
     ListPlayersResult GetPlayers(std::string_view token);
     // Получает игровое состояние для игрока с заданным токеном
     GetStateResult GetState(std::string_view token);
+    // Выполняет действие для игрока с заданным токеном
+    PlayerActionResult ExecutePlayerAction(std::string_view token, PlayerAction action);
 
 private:
     Players players_;
@@ -38,6 +42,7 @@ private:
     JoinGameUseCase join_game_;
     ListPlayersUseCase list_players_;
     GetStateUseCase game_state_;
+    PlayerActionUseCase player_action_;
     ListMapsUseCase list_maps_;
     GetMapUseCase get_map_;
 };

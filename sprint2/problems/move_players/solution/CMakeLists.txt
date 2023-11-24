@@ -17,6 +17,8 @@ add_executable(game_server
 	src/app/join_use_case.h
 	src/app/maps_use_case.cpp
 	src/app/maps_use_case.h
+	src/app/player_use_case.cpp
+	src/app/player_use_case.h
 	src/app/players_use_case.cpp
 	src/app/players_use_case.h
 	src/app/players.cpp

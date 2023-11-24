@@ -11,6 +11,11 @@ public:
     std::string map_id;
 };
 
+class PlayerActionParams {
+public:
+    std::string direction;
+};
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 

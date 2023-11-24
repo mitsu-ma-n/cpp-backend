@@ -266,6 +266,12 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetSta
     jv.emplace_object() = object_players;
 }
 
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerActionResult const& action_result) {
+    json::object object;    // Пустой объект
+    object.clear();
+    jv.emplace_object() = object;
+}
+
 } // namespace app
 
 
@@ -319,6 +325,18 @@ bool ReadJoinParamsFromString(http_handler::JoinParams& params, std::string str)
 
     return true;
 }
+
+bool ReadPlayerActionParamsFromString(http_handler::PlayerActionParams& params, std::string str) {
+    // Распарсить строку как JSON, используя boost::json::parse
+    // Получаем json-объект из строки (тип value)
+    auto parsed_config_json = json::parse(str);
+    auto obj = parsed_config_json.as_object();
+
+    params.direction = value_to<std::string>(obj.at(std::string(json_field::JOIN_NAME)));
+
+    return true;
+}
+
 
 
 }  // namespace json_loader

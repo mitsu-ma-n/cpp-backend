@@ -64,4 +64,6 @@ namespace json_field {
     constexpr static char LIST_PLAYERS_NAME[]  = "name";
     // GetState
     constexpr static char GET_STATE_PLAYERS[]  = "players";
+    // PlayerActionParams
+    constexpr static char PLAYER_ACTION_MOVE_DIRECTION[]  = "move";
 }

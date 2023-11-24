@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 #include "tagged.h"
 
@@ -219,6 +221,37 @@ public:
         return speed_;
     }
 
+    void SetSpeed(DynamicDimension speed, std::optional<Direction> direction) {
+        if (!direction.has_value()) {
+            speed_.ux = speed_.uy = 0.0;
+            return;
+        }
+
+        direction_ = direction.value();
+        switch (direction_) {
+            case Direction::NORTH: {
+                speed_.ux = 0.0;
+                speed_.uy = speed;
+                break;
+            }
+            case Direction::SOUTH: {
+                speed_.ux = 0.0;
+                speed_.uy = -speed;
+                break;
+            }
+            case Direction::WEST: {
+                speed_.ux = -speed;
+                speed_.uy = 0.0;
+                break;
+            }
+            case Direction::EAST: {
+                speed_.ux = speed;
+                speed_.uy = 0.0;
+                break;
+            }
+        }
+    }
+
     std::string GetDirectionAsString() const noexcept {
         return {(char)direction_};
     }
@@ -250,6 +283,11 @@ public:
     const Dogs& GetDogs() const noexcept {
         return dogs_;
     }
+
+    const Map& GetMap() const noexcept {
+        return *map_;
+    }
+
 
     const Dog* FindDog(const Dog::Id& id) const noexcept {
         if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {

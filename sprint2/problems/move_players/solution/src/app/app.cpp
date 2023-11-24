@@ -1,4 +1,5 @@
 #include "app.h"
+#include "player_use_case.h"
 #include <stdexcept>
 
 namespace app {
@@ -21,6 +22,10 @@ ListPlayersResult Application::GetPlayers(std::string_view token) {
 
 GetStateResult Application::GetState(std::string_view token) {
     return game_state_.GetState(app::Token(std::string(token)));
+}
+
+PlayerActionResult Application::ExecutePlayerAction(std::string_view token, PlayerAction action) {
+    return player_action_.ExecutePlayerAction(app::Token(std::string(token)), action);
 }
 
 }  // namespace app

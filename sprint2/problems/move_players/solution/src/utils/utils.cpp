@@ -25,7 +25,7 @@ namespace my_random {
 
 namespace validators {
     bool IsValidToken(const std::string_view& token) {
-        return token.size() != 32;
+        return token.size() == 32;
     }
 }
 

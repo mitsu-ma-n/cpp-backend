@@ -15,10 +15,14 @@ namespace api_strings {
     constexpr static std::string_view MAPS_PATH    = "maps"sv;
     constexpr static std::string_view GAME_PATH    = "game"sv;
     // --- LVL 3 --- // Action
-    constexpr static int              ACTION_POS   = 3;
+    constexpr static int              LVL3_POS     = 3;
     constexpr static std::string_view JOIN_PATH    = "join"sv;
     constexpr static std::string_view PLAYERS_PATH = "players"sv;
     constexpr static std::string_view STATE_PATH   = "state"sv;
+    constexpr static std::string_view PLAYER_PATH  = "player"sv;
+    // --- LVL 4 --- // 
+    constexpr static int              LVL4_POS     = 4;
+    constexpr static std::string_view ACTION_PATH  = "action"sv;
 }
 
 namespace ContentType {
@@ -42,10 +46,11 @@ namespace ContentType {
 
 namespace AllowedMethods {
     using namespace std::literals;
-    constexpr static std::string_view MAPS    = "GET, HEAD"sv;
-    constexpr static std::string_view JOIN    = "POST"sv;
-    constexpr static std::string_view PLAYERS = "GET, HEAD"sv;
-    constexpr static std::string_view STATE   = "GET, HEAD"sv;
+    constexpr static std::string_view MAPS          = "GET, HEAD"sv;
+    constexpr static std::string_view JOIN          = "POST"sv;
+    constexpr static std::string_view PLAYERS       = "GET, HEAD"sv;
+    constexpr static std::string_view STATE         = "GET, HEAD"sv;
+    constexpr static std::string_view PLAYER_ACTION = "POST"sv;
     // Для единообразия. Для ошибки на самом деле не нужен допустимый метод.
     constexpr static std::string_view ERROR   = "GET, HEAD"sv;
 };

@@ -34,6 +34,10 @@ public:
         return name_;
     }
 
+    model::Dog& GetDog() {
+        return *dog_;
+    }
+
     model::GameSession* GetSession() const {
         return session_;
     }
