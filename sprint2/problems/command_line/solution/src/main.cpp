@@ -4,6 +4,8 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>  // add_console_log()
+#include <boost/program_options.hpp>
+
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -28,6 +30,58 @@ namespace logging = boost::log;
 
 namespace {
 
+struct Args {
+    bool is_dt_set = false;
+    unsigned long dt;
+    std::string config_file;
+    std::string static_path;
+    bool is_random_spawn;
+};
+
+[[nodiscard]] std::optional<Args> ParseCommandLine(int argc, const char* const argv[]) {
+    namespace po = boost::program_options;
+
+    po::options_description desc{"All options"s};
+
+    Args args;
+    desc.add_options()
+        // Добавляем опцию --help и её короткую версию -h
+        ("help,h", "Show help")
+        // Опция --tick-period milliseconds, сохраняющая свои аргументы в поле args.dt
+        ("tick-period,t", po::value(&args.dt)->value_name("milliseconds"s), "set tick period")
+        // Опция --config-file file, сохраняющая свой аргумент в поле args.config_file
+        ("config-file,c", po::value(&args.config_file)->value_name("file"s), "set config file path")
+        // Опция --www-root path, сохраняющая свой аргумент в поле args.static_path
+        ("www-root,w", po::value(&args.static_path)->value_name("dir"s), "set static files root")
+        // Опция --randomize-spawn-points, сохраняющая свой аргумент в поле args.is_random_spawn
+        ("randomize-spawn-points", po::bool_switch(&args.is_random_spawn),"spawn dogs at random positions");
+
+    // variables_map хранит значения опций после разбора
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.contains("help"s)) {
+        // Если был указан параметр --help, то выводим справку и возвращаем nullopt
+        std::cout << desc;
+        return std::nullopt;
+    }
+
+    // Проверяем наличие опций
+    if (vm.contains("tick-period"s)) {
+        args.is_dt_set = true;
+    }
+    if (!vm.contains("config-file"s)) {
+        throw std::runtime_error("Config file path have not been specified"s);
+    }
+    if (!vm.contains("www-root"s)) {
+        throw std::runtime_error("Static files root is not specified"s);
+    }
+
+    // С опциями программы всё в порядке, возвращаем структуру args
+    return args;
+}
+
 // Запускает функцию fn на n потоках, включая текущий
 template <typename Fn>
 void RunWorkers(unsigned n, const Fn& fn) {
@@ -44,13 +98,14 @@ void RunWorkers(unsigned n, const Fn& fn) {
 }  // namespace
 
 int main(int argc, const char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: game_server <game-config-json> <static-files-folder>"sv << std::endl;
-        return EXIT_FAILURE;
-    }
     try {
+        std::optional<Args> args = ParseCommandLine(argc, argv);
+        if ( !args.has_value() ) {
+            return EXIT_SUCCESS;
+        }
+
         // 1. Загружаем карту из файла и построить модель игры
-        model::Game game = json_loader::LoadGame(argv[1]);
+        model::Game game = json_loader::LoadGame(args->config_file);
 
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
@@ -63,11 +118,13 @@ int main(int argc, const char* argv[]) {
         // Объект Application содержит сценарии использования
         app::Application app(game);
 
-        // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
-        auto ticker = std::make_shared<utils::Ticker>(api_strand, 50ms,
-            [&app](std::chrono::milliseconds delta) { app.ExecuteTick(delta.count()); }
-        );
-        ticker->Start();
+        if (args->is_dt_set) {
+            // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
+            auto ticker = std::make_shared<utils::Ticker>(api_strand, std::chrono::milliseconds(args->dt),
+                [&app](std::chrono::milliseconds delta) { app.ExecuteTick(delta.count()); }
+            );
+            ticker->Start();
+        }
 
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         // Подписываемся на сигналы и при их получении завершаем работу сервера
@@ -81,7 +138,7 @@ int main(int argc, const char* argv[]) {
         });
 
         // Устанавливаем путь к статическим файлам
-        fs::path base_path{std::string(argv[2])};
+        fs::path base_path{std::string(args->static_path)};
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path);

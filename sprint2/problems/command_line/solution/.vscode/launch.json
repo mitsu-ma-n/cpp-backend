@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Game",   // Название - выбираем сами, чтобы удобно искать
+            "name": "Debug Game help",   // Название - выбираем сами, чтобы удобно искать
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
-            "args": ["./data/config.json"],   // Аргументы указываются через запятую отдельно. Эта запись соответсвует строке "2222 3333", если бы мы писали в терминале
+            "args": ["--help"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -29,11 +29,59 @@
             ]
         },
         {
-            "name": "Debug Game FS",   // Название - выбираем сами, чтобы удобно искать
+            "name": "Debug Game all",   // Название - выбираем сами, чтобы удобно искать
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
-            "args": ["./data/config.json", "./static"],   // Аргументы указываются через запятую отдельно. Эта запись соответсвует строке "2222 3333", если бы мы писали в терминале
+            "args": ["--tick-period", "10", "--config-file", "./data/config.json", "--www-root", "./static", "--randomize-spawn-points"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Debug Game tick",   // Название - выбираем сами, чтобы удобно искать
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
+            "args": ["--tick-period", "10", "--config-file", "./data/config.json", "--www-root", "./static"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Debug Game minimum",   // Название - выбираем сами, чтобы удобно искать
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
+            "args": ["--config-file", "./data/config.json", "--www-root", "./static"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
