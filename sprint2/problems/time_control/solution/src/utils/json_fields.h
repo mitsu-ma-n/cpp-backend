@@ -66,4 +66,6 @@ namespace json_field {
     constexpr static char GET_STATE_PLAYERS[]  = "players";
     // PlayerActionParams
     constexpr static char PLAYER_ACTION_MOVE_DIRECTION[]  = "move";
+    // TickParams
+    constexpr static char TICK_DT[]  = "timeDelta";
 }

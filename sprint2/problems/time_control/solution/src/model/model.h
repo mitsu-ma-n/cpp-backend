@@ -1,17 +1,21 @@
 #pragma once
 
-#include <cmath>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <optional>
+#include <set>
 
 #include "tagged.h"
+#include "utils.h"
 
 namespace model {
 
-using DynamicDimension = double;
+using DynamicDimension = double;    // Расстояние игровых единицах
 using DynamicCoord = DynamicDimension;
+using StartEndCoord = std::pair<DynamicDimension,DynamicDimension>;
+
+using TimeType = DynamicDimension;  // Время в секундах
 
 struct Position {
     DynamicCoord x, y;
@@ -20,6 +24,11 @@ struct Position {
 struct Speed {
     DynamicDimension ux, uy;
 };
+
+Position operator*(Speed speed, TimeType dt);
+Position operator+(Position a, Position b);
+bool operator==(Position a, Position b);
+bool operator!=(Position a, Position b);
 
 using Dimension = int;
 using Coord = Dimension;
@@ -80,6 +89,18 @@ public:
         return end_;
     }
 
+    StartEndCoord GetOxProjection() const noexcept {
+        return {std::min(start_.x, end_.x)-d_width, std::max(start_.x, end_.x)+d_width};
+    }
+
+    StartEndCoord GetOyProjection() const noexcept {
+        return {std::min(start_.y, end_.y)-d_width, std::max(start_.y, end_.y)+d_width};
+    }
+
+public:
+    // Половина ширины дороги или расстояние, на которое можно отойти от оси дороги
+    static constexpr DynamicDimension d_width = 0.4;
+
 private:
     Point start_;
     Point end_;
@@ -134,10 +155,10 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name, DynamicDimension dogSpeed = 1.0) noexcept
+    Map(Id id, std::string name) noexcept
         : id_(std::move(id))
         , name_(std::move(name))
-        , dogSpeed_(dogSpeed) {
+        , dog_speed_(std::nullopt) {
     }
 
     const Id& GetId() const noexcept {
@@ -168,16 +189,25 @@ public:
         buildings_.emplace_back(building);
     }
 
+    std::optional<DynamicDimension> GetDogSpeed() const noexcept {
+        return dog_speed_;
+    }
+
+    void SetDogSpeed(DynamicDimension dog_speed) noexcept {
+        dog_speed_ = dog_speed;
+    }
+
     void AddOffice(Office office);
 
 public:
-    DynamicDimension dogSpeed_;
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
     Id id_;
     std::string name_;
+    std::optional<DynamicDimension> dog_speed_;
+
     Roads roads_;
     Buildings buildings_;
 
@@ -217,6 +247,10 @@ public:
         return position_;
     }
 
+    void SetPosition(Position pos) noexcept {
+        position_ = pos;
+    }
+
     const Speed& GetSpeed() const noexcept {
         return speed_;
     }
@@ -231,12 +265,12 @@ public:
         switch (direction_) {
             case Direction::NORTH: {
                 speed_.ux = 0.0;
-                speed_.uy = speed;
+                speed_.uy = -speed;
                 break;
             }
             case Direction::SOUTH: {
                 speed_.ux = 0.0;
-                speed_.uy = -speed;
+                speed_.uy = speed;
                 break;
             }
             case Direction::WEST: {
@@ -254,6 +288,10 @@ public:
 
     std::string GetDirectionAsString() const noexcept {
         return {(char)direction_};
+    }
+
+    Direction GetDirection() const noexcept {
+        return direction_;
     }
 
 private:
@@ -288,6 +326,15 @@ public:
         return *map_;
     }
 
+    void Tick(TimeType dt) noexcept {
+        // Для всех собак сессии
+        for (auto dog : dogs_) {
+            // Находим новые координаты
+            auto pos = MoveDog(*dog, dt);
+            // и устанавливаем их
+            dog->SetPosition(pos);
+        }
+    }
 
     const Dog* FindDog(const Dog::Id& id) const noexcept {
         if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
@@ -295,6 +342,9 @@ public:
         }
         return nullptr;
     }
+
+private:
+    Position MoveDog(Dog& dog, TimeType dt) noexcept;
 
 private:
     using DogIdHasher = util::TaggedHasher<Dog::Id>;
@@ -308,9 +358,10 @@ private:
 class Game {
 public:
     using Maps = std::vector<Map>;
+    using GameSessions = std::vector<GameSession*>;
 
     Game(DynamicDimension dogSpeed = 1.0) noexcept
-        : defuaultDogSpeed_{dogSpeed} {
+        : defuault_dog_speed_{dogSpeed} {
     }
 
     ~Game() {
@@ -324,6 +375,10 @@ public:
 
     const Maps& GetMaps() const noexcept {
         return maps_;
+    }
+
+    const GameSessions& GetSessions() const noexcept {
+        return sessions_;
     }
 
     const Map* FindMap(const Map::Id& id) const noexcept {
@@ -347,17 +402,24 @@ public:
         }
     }
 
-public:
-    DynamicDimension defuaultDogSpeed_;
+    const DynamicDimension GetDefaultDogSpeed() const noexcept {
+        return defuault_dog_speed_;
+    }
+
+    void SetDefaultDogSpeed(DynamicDimension dog_speed) noexcept {
+        defuault_dog_speed_ = dog_speed;
+    }
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
-    std::vector<Map> maps_;
+    DynamicDimension defuault_dog_speed_;
+
+    Maps maps_;
     MapIdToIndex map_id_to_map_index_;
 
-    std::vector<GameSession*> sessions_;
+    GameSessions sessions_;
     MapIdToIndex map_id_to_session_index_;
 };
 

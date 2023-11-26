@@ -16,6 +16,11 @@ public:
     std::string direction;
 };
 
+class TickParams {
+public:
+    unsigned long dt;   // в миллисекундах
+};
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 

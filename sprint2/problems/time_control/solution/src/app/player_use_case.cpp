@@ -18,7 +18,7 @@ PlayerActionResult PlayerActionUseCase::ExecutePlayerAction(Token token, PlayerA
     auto move = action.GetMoveAsDirection();
 
     if ( auto self_player = player_tokens_->FindPlayerByToken(token) ) {
-        double map_speed = self_player->GetSession()->GetMap().dogSpeed_;
+        double map_speed = self_player->GetSession()->GetMap().GetDogSpeed().value();
         self_player->GetDog().SetSpeed(map_speed, move);
     } else {
         throw PlayerActionError{PlayerActionErrorReason::InvalidToken};

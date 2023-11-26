@@ -1,5 +1,6 @@
 #include "app.h"
 #include "player_use_case.h"
+#include "tick_use_case.h"
 #include <stdexcept>
 
 namespace app {
@@ -26,6 +27,10 @@ GetStateResult Application::GetState(std::string_view token) {
 
 PlayerActionResult Application::ExecutePlayerAction(std::string_view token, PlayerAction action) {
     return player_action_.ExecutePlayerAction(app::Token(std::string(token)), action);
+}
+
+TickResult Application::ExecuteTick(Tick tick) {
+    return tick_.ExecuteTick(tick);
 }
 
 }  // namespace app

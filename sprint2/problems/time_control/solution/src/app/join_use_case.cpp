@@ -1,5 +1,4 @@
 #include "join_use_case.h"
-#include "model.h"
 #include <cstddef>
 #include <stdexcept>
 
@@ -15,7 +14,9 @@ bool isValidName(Player::Name name) {
 model::Position GetRandomPointOnMap(const model::Map& map) {
     auto roads = map.GetRoads();
     // Выбираем случайную дорогу
-    size_t road_index = utils::my_random::GetRandomIndex(0, roads.size()-1);
+//    size_t road_index = utils::my_random::GetRandomIndex(0, roads.size()-1);
+// Временно для тестрования берём начальную точку первой дороги
+    size_t road_index = 0;
     model::Road& road = roads[road_index];
 
     // Выбираем случайную точку на дороге
@@ -23,6 +24,9 @@ model::Position GetRandomPointOnMap(const model::Map& map) {
     model::Point end = road.GetEnd();
 
     model::Position res;
+    res.x = start.x;
+    res.y = start.y;
+/*
     if ( road.IsHorizontal() ) {
         res.y = start.y;
         res.x = utils::my_random::GetRandomDouble(start.x, end.x);
@@ -30,7 +34,7 @@ model::Position GetRandomPointOnMap(const model::Map& map) {
         res.x = start.x;
         res.y = utils::my_random::GetRandomDouble(start.y, end.y);
     }
-
+*/
     return res;
 }
 

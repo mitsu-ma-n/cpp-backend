@@ -25,6 +25,8 @@ add_executable(game_server
 	src/app/players.h
 	src/app/state_use_case.cpp
 	src/app/state_use_case.h
+	src/app/tick_use_case.cpp
+	src/app/tick_use_case.h
 	src/http/api_handler.cpp
 	src/http/api_handler.h
 	src/http/file_handler.cpp

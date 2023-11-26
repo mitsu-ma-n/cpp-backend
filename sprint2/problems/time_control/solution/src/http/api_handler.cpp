@@ -20,6 +20,7 @@
 #include "json_fields.h"
 #include "json_loader.h"
 #include "http_handler_defs.h"
+#include "tick_use_case.h"
 
 namespace json = boost::json;
 namespace urls = boost::urls;
@@ -106,7 +107,9 @@ StringResponse ApiHandler::GetMapsResponse(const StringRequest& req, const std::
         response_size = response_body.size();   // Запоминаем размер
     }
 
-    return this->MakeStringResponse(status, response_body, response_size, req.version(), req.keep_alive(), content_type, allowed_method);
+    StringResponse response = this->MakeStringResponse(status, response_body, response_size, req.version(), req.keep_alive(), content_type, allowed_method);
+    response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
+    return response;
 }
 
 bool ApiHandler::isValidVersion(const std::vector<std::string>&  segments) const {
@@ -126,6 +129,8 @@ StringResponse ApiHandler::GetGameResponse(const StringRequest& req, const std::
         return GetStateResponse(req, segments);
     } else if ( isPlayerActionRequest(segments) ) {
         return GetPlayerActionResponse(req, segments);
+    } else if ( isTickRequest(segments) ) {
+        return GetTickResponse(req, segments);
     }
     // Неизвестная цель запроса
     auto body = GenerateErrorResponse(json_field::API_CODE_BAD_REQUEST, "Bad request to the game");
@@ -371,6 +376,58 @@ StringResponse ApiHandler::GetPlayerActionResponse(const StringRequest& req, con
 http::status ApiHandler::ExecutePlayerAction(std::string_view token, PlayerActionParams params, std::string& response_body) {
     app::PlayerAction action = app::PlayerAction(params.direction);
     app::PlayerActionResult res = app_.ExecutePlayerAction(token, action);
+    response_body = boost::json::serialize(json::value_from(res));
+    return http::status::ok;
+}
+
+bool ApiHandler::isTickRequest(const std::vector<std::string>&  segments) const {
+    return segments[api_strings::LVL3_POS] == api_strings::TICK_PATH;
+}
+
+StringResponse ApiHandler::GetTickResponse(const StringRequest& req, const std::vector<std::string>& segments) {
+    std::string req_target(req.target());
+    std::string content_type(ContentType::APP_JSON);
+    std::string response_body;
+    std::string_view allowed_method(AllowedMethods::TICK);
+
+    http::status status = http::status::ok;
+
+    auto req_content_type = req[http::field::content_type];
+    // Проверям корректность запроса
+    if (req_content_type == ContentType::APP_JSON) {
+        // Парсим JSON
+        std::string req_body(req.body());
+        TickParams params;
+        try {
+            json_loader::ReadTickParamsFromString(params, req_body);
+            status = ExecuteTick(params, response_body);
+        } catch (std::exception err) {
+            response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_ARGUMENT, "Tick request parse error");
+            status = http::status::bad_request;
+        }
+
+        // Сначала хотелось выделить следующий блок в отдельную функцию, но оказалось, что к разным веткам АПИ
+        // допустимы разные методы запросов. Поэтому обрабатывать метод нужно в каждой ветке отдельно
+        auto req_method = req.method();
+        if (req_method != http::verb::post) {   // Недопустимый метод
+            status = http::status::method_not_allowed;
+            // Сгенерировать JSON с ошибкой
+            response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_METHOD, "Only POST method is expected"s);
+        }
+    } else {
+        response_body = GenerateErrorResponse(json_field::API_CODE_INVALID_ARGUMENT, "Invalid content type");
+        status = http::status::bad_request;
+    }
+
+    auto response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
+    response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
+    return response;
+}
+
+http::status ApiHandler::ExecuteTick(TickParams params, std::string& response_body) {
+    // Переводим dt из миллисекунд в секунды
+    app::Tick dt{params.dt/1000.0};
+    app::TickResult res = app_.ExecuteTick(dt);
     response_body = boost::json::serialize(json::value_from(res));
     return http::status::ok;
 }

@@ -20,6 +20,7 @@ namespace api_strings {
     constexpr static std::string_view PLAYERS_PATH = "players"sv;
     constexpr static std::string_view STATE_PATH   = "state"sv;
     constexpr static std::string_view PLAYER_PATH  = "player"sv;
+    constexpr static std::string_view TICK_PATH    = "tick"sv;
     // --- LVL 4 --- // 
     constexpr static int              LVL4_POS     = 4;
     constexpr static std::string_view ACTION_PATH  = "action"sv;
@@ -51,6 +52,7 @@ namespace AllowedMethods {
     constexpr static std::string_view PLAYERS       = "GET, HEAD"sv;
     constexpr static std::string_view STATE         = "GET, HEAD"sv;
     constexpr static std::string_view PLAYER_ACTION = "POST"sv;
+    constexpr static std::string_view TICK          = "POST"sv;
     // Для единообразия. Для ошибки на самом деле не нужен допустимый метод.
     constexpr static std::string_view ERROR   = "GET, HEAD"sv;
 };

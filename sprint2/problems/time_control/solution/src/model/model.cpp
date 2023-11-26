@@ -5,6 +5,23 @@
 namespace model {
 using namespace std::literals;
 
+Position operator*(Speed speed, TimeType dt) {
+    return Position{speed.ux * dt, speed.uy * dt};
+}
+
+Position operator+(Position a, Position b) {
+    return Position{a.x + b.x, a.y + b.y};
+}
+
+bool operator==(Position a, Position b) {
+    const DynamicDimension eps = 1.e-14;
+    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) < eps;
+}
+
+bool operator!=(Position a, Position b) {
+    return !(a == b);
+}
+
 void Map::AddOffice(Office office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
         throw std::invalid_argument("Duplicate warehouse");
@@ -40,6 +57,87 @@ Dog* GameSession::AddDog(Position pos, Dog::Name name) {
     }
     return dogs_[index];
 }
+
+Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
+    // Направление движения собаки
+    Direction dog_direction = dog.GetDirection();
+    // Переводим координаты на прямую в направлении движения собаки
+    auto NormalizeCoord = [](Direction dog_direction, Position pos) {
+        switch (dog_direction) {
+            case Direction::NORTH: return -pos.y;
+            case Direction::SOUTH: return  pos.y;
+            case Direction::WEST:  return -pos.x;
+            case Direction::EAST:  return  pos.x;
+        }
+        // По идее, недостижимое условие
+        return DynamicCoord{0.0};
+    };
+
+    auto dog_start_pos = dog.GetPosition();
+    // Сначала находим конечную позицию в предположении, что туда можно попасть
+    auto dog_end_pos = dog.GetPosition()+dog.GetSpeed()*dt;
+
+    //StartEndCoord dog_movement = {dog_start_pos, dog_end_pos};
+    Direction dir = dog.GetDirection();
+    bool isHorizontalMove = dir == Direction::WEST || dir == Direction::EAST;
+
+    // Проектируем дороги на вектор движения
+    std::set<DynamicDimension> maximums;
+    for ( auto road : map_->GetRoads() ) {
+        auto ox_projection = road.GetOxProjection();
+        auto oy_projection = road.GetOyProjection();
+        StartEndCoord projection;
+        // Проверяем, что вектор движения пересекает дорогу
+        if ( isHorizontalMove ) {
+            if ( road.IsHorizontal() && !utils::geometry::IsInInterval(dog_start_pos.y, oy_projection) ) {
+                continue;   // Дорога вне вектора движения
+            }
+            if (dir == Direction::WEST) {
+                projection = {-ox_projection.first, -ox_projection.second};
+            } else {
+                projection = {ox_projection.first, ox_projection.second};
+            }
+            // Запоминаем проекцию на вектор движения
+            projection = {std::minmax(projection.first, projection.second)};
+        } else {
+            if ( road.IsVertical() && !utils::geometry::IsInInterval(dog_start_pos.x, ox_projection) ) {
+                continue;   // Дорога вне вектора движения
+            }
+            if (dir == Direction::NORTH) {
+                projection = {-oy_projection.first, -oy_projection.second};
+            } else {
+                projection = {oy_projection.first, oy_projection.second};
+            }
+            projection = {std::minmax(projection.first, projection.second)};
+        }
+        // Дорога пересекает вектор движения. Ищем максимум пересечения в направлении движения
+        auto res = utils::geometry::GetMaxMoveOnSegment(NormalizeCoord(dog_direction, dog_start_pos), 
+            NormalizeCoord(dog_direction, dog_end_pos), projection.first, projection.second);
+
+        if ( res ) {
+            maximums.insert(*res);
+        }
+    }
+
+    DynamicDimension result = (dir == Direction::WEST || dir == Direction::NORTH) ? -*maximums.rbegin() : *maximums.rbegin();
+
+    // Перед возвратом проверим, что мы не врезались в границу дороги.
+    // Если врезались, нужно занулить скорость
+
+    Position res;
+    if (isHorizontalMove) {
+        res = {result, dog_start_pos.y};
+    } else {
+        res = {dog_start_pos.x, result};
+    }
+
+    if( dog_end_pos != res ) {
+        dog.SetSpeed(0.0, std::nullopt);
+    }
+
+    return res;
+}
+
 
 void Game::AddMap(Map map) {
     const size_t index = maps_.size();

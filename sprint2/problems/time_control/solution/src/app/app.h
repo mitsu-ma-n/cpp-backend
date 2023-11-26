@@ -7,6 +7,7 @@
 #include "state_use_case.h"
 #include "maps_use_case.h"
 #include "player_use_case.h"
+#include "tick_use_case.h"
 #include <string>
 
 namespace app {
@@ -18,6 +19,7 @@ public:
         , list_players_{tokens_, players_}
         , game_state_{tokens_, players_}
         , player_action_{tokens_}
+        , tick_{game}
         , list_maps_{game}
         , get_map_{game} {
     }
@@ -34,6 +36,8 @@ public:
     GetStateResult GetState(std::string_view token);
     // Выполняет действие для игрока с заданным токеном
     PlayerActionResult ExecutePlayerAction(std::string_view token, PlayerAction action);
+    // Выполняет один шаг по времени в игре
+    TickResult ExecuteTick(Tick tick);
 
 private:
     Players players_;
@@ -45,6 +49,7 @@ private:
     PlayerActionUseCase player_action_;
     ListMapsUseCase list_maps_;
     GetMapUseCase get_map_;
+    TickUseCase tick_;
 };
 
 }  // namespace app

@@ -8,10 +8,12 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <iostream>
+#include <stdexcept>
 #include <string_view>
 
 #include "json_fields.h"
 #include "model.h"
+#include "tick_use_case.h"
 
 namespace json = boost::json;
 using namespace std::literals;
@@ -97,7 +99,7 @@ Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
     };
 
     if( auto it = obj.find(json_field::MAP_DOG_SPEED); it != obj.end() ) {
-        map.dogSpeed_ = value_to<double>(it->value());
+        map.SetDogSpeed(value_to<double>(it->value()));
     }
 
     AddRoads(map,obj);
@@ -272,6 +274,12 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::Player
     jv.emplace_object() = object;
 }
 
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::TickResult const& action_result) {
+    json::object object;    // Пустой объект
+    object.clear();
+    jv.emplace_object() = object;
+}
+
 } // namespace app
 
 
@@ -303,11 +311,14 @@ Game LoadGame(const std::filesystem::path& json_path) {
     auto parsed_config_json = json::parse(input);
     auto obj = parsed_config_json.as_object();
 
-    game.defuaultDogSpeed_ = value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED)));
+    game.SetDefaultDogSpeed(value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED))));
 
     // Добавляем карты в игру
     auto maps = value_to<std::vector<Map>>(obj.at(std::string(json_field::GAME_MAPS)));
     for (auto map : maps) {
+        if(!map.GetDogSpeed()) {
+            map.SetDogSpeed(game.GetDefaultDogSpeed());
+        }
         game.AddMap(map);
     }
    
@@ -332,11 +343,26 @@ bool ReadPlayerActionParamsFromString(http_handler::PlayerActionParams& params, 
     auto parsed_config_json = json::parse(str);
     auto obj = parsed_config_json.as_object();
 
-    params.direction = value_to<std::string>(obj.at(std::string(json_field::JOIN_NAME)));
+    params.direction = value_to<std::string>(obj.at(std::string(json_field::PLAYER_ACTION_MOVE_DIRECTION)));
 
     return true;
 }
 
+bool ReadTickParamsFromString(http_handler::TickParams& params, std::string str) {
+    // Распарсить строку как JSON, используя boost::json::parse
+    // Получаем json-объект из строки (тип value)
+    auto parsed_config_json = json::parse(str);
+    auto obj = parsed_config_json.as_object();
+
+    auto val = obj.at(std::string(json_field::TICK_DT));
+    if ( !val.is_int64() ) {
+        throw std::runtime_error("Time delta must be int64");
+    }
+
+    params.dt = value_to<int>(val);
+
+    return true;
+}
 
 
 }  // namespace json_loader

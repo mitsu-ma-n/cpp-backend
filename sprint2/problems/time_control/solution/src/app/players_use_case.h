@@ -1,6 +1,5 @@
 #pragma once
 
-#include "model.h"
 #include "players.h"
 #include <string>
 
