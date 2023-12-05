@@ -22,7 +22,7 @@ bool operator!=(Position a, Position b) {
     return !(a == b);
 }
 
-void Map::AddOffice(Office office) {
+void Map::AddOffice(const Office& office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
         throw std::invalid_argument("Duplicate warehouse");
     }
@@ -38,7 +38,7 @@ void Map::AddOffice(Office office) {
     }
 }
 
-Dog* GameSession::AddDog(Position pos, Dog::Name name) {
+Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
     const size_t index = dogs_.size();  // Получаем незанятый индекс
     // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
     // Пробуем добавить
@@ -139,7 +139,7 @@ Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
 }
 
 
-void Game::AddMap(Map map) {
+void Game::AddMap(const Map& map) {
     const size_t index = maps_.size();
     if (auto [it, inserted] = map_id_to_map_index_.emplace(map.GetId(), index); !inserted) {
         throw std::invalid_argument("Map with id "s + *map.GetId() + " already exists"s);
@@ -153,7 +153,7 @@ void Game::AddMap(Map map) {
     }
 }
 
-GameSession* Game::CreateSession(Map::Id map_id) {
+GameSession* Game::CreateSession(const Map::Id& map_id) {
     //  Найдём карту, к которой хотим подключиться
     auto map = FindMap(map_id);
     if( !map ) {

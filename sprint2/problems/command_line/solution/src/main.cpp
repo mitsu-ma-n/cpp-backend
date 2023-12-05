@@ -6,6 +6,7 @@
 #include <boost/log/utility/setup/console.hpp>  // add_console_log()
 #include <boost/program_options.hpp>
 
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <thread>
@@ -82,17 +83,18 @@ struct Args {
     return args;
 }
 
-// Запускает функцию fn на n потоках, включая текущий
+// Запускает функцию func на n_threads потоках, включая текущий
 template <typename Fn>
-void RunWorkers(unsigned n, const Fn& fn) {
-    n = std::max(1u, n);
+void RunWorkers(unsigned n_threads, const Fn& func) {
+    // число рабочих потоков (минимум один)
+    n_threads = std::max(1u, n_threads);
     std::vector<std::jthread> workers;
-    workers.reserve(n - 1);
-    // Запускаем n-1 рабочих потоков, выполняющих функцию fn
-    while (--n) {
-        workers.emplace_back(fn);
+    workers.reserve(n_threads - 1);
+    // Запускаем n-1 рабочих потоков, выполняющих функцию func
+    while (--n_threads) {
+        workers.emplace_back(func);
     }
-    fn();
+    func();
 }
 
 }  // namespace
@@ -133,7 +135,7 @@ int main(int argc, const char* argv[]) {
             if (!ec) {
                 ioc.stop();
             }
-            BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, 0}))
+            BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, EXIT_SUCCESS}))
                                     << server_params::EXIT_MESSAGE;
         });
 
@@ -170,7 +172,9 @@ int main(int argc, const char* argv[]) {
             ioc.run();
         });
     } catch (const std::exception& ex) {
-        std::cerr << ex.what() << std::endl;
+        BOOST_LOG_TRIVIAL(error) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, EXIT_FAILURE}))
+                                 << ex.what();
         return EXIT_FAILURE;
     }
+    return EXIT_SUCCESS;
 }

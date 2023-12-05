@@ -81,11 +81,11 @@ public:
         return start_.x == end_.x;
     }
 
-    Point GetStart() const noexcept {
+    const Point& GetStart() const noexcept {
         return start_;
     }
 
-    Point GetEnd() const noexcept {
+    const Point& GetEnd() const noexcept {
         return end_;
     }
 
@@ -126,19 +126,19 @@ public:
 
     Office(Id id, Point position, Offset offset) noexcept
         : id_{std::move(id)}
-        , position_{position}
-        , offset_{offset} {
+        , position_{std::move(position)}
+        , offset_{std::move(offset)} {
     }
 
     const Id& GetId() const noexcept {
         return id_;
     }
 
-    Point GetPosition() const noexcept {
+    const Point& GetPosition() const noexcept {
         return position_;
     }
 
-    Offset GetOffset() const noexcept {
+    const Offset& GetOffset() const noexcept {
         return offset_;
     }
 
@@ -156,9 +156,9 @@ public:
     using Offices = std::vector<Office>;
 
     Map(Id id, std::string name) noexcept
-        : id_(std::move(id))
-        , name_(std::move(name))
-        , dog_speed_(std::nullopt) {
+        : id_{std::move(id)}
+        , name_{std::move(name)}
+        , dog_speed_{std::nullopt} {
     }
 
     const Id& GetId() const noexcept {
@@ -197,7 +197,7 @@ public:
         dog_speed_ = dog_speed;
     }
 
-    void AddOffice(Office office);
+    void AddOffice(const Office& office);
 
 public:
 
@@ -247,7 +247,7 @@ public:
         return position_;
     }
 
-    void SetPosition(Position pos) noexcept {
+    void SetPosition(const Position& pos) noexcept {
         position_ = pos;
     }
 
@@ -255,7 +255,7 @@ public:
         return speed_;
     }
 
-    void SetSpeed(DynamicDimension speed, std::optional<Direction> direction) {
+    void SetSpeed(DynamicDimension speed, std::optional<Direction> direction) noexcept {
         if (!direction.has_value()) {
             speed_.ux = speed_.uy = 0.0;
             return;
@@ -290,7 +290,7 @@ public:
         return {(char)direction_};
     }
 
-    Direction GetDirection() const noexcept {
+    const Direction& GetDirection() const noexcept {
         return direction_;
     }
 
@@ -316,7 +316,7 @@ public:
         }
     }
 
-    Dog* AddDog(Position pos, Dog::Name name);
+    Dog* AddDog(Position pos, const Dog::Name& name);
 
     const Dogs& GetDogs() const noexcept {
         return dogs_;
@@ -370,8 +370,8 @@ public:
         }
     }
 
-    void AddMap(Map map);
-    GameSession* CreateSession(Map::Id map_id);
+    void AddMap(const Map& map);
+    GameSession* CreateSession(const Map::Id& map_id);
 
     const Maps& GetMaps() const noexcept {
         return maps_;

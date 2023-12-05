@@ -7,7 +7,7 @@ namespace app {
 // Проверка имени на правильность
 bool isValidName(Player::Name name) {
     // На данный момент проверяем только пустоту строки
-    return !(*name).empty();
+    return !name->empty();
 }
 
 // Получение произвольной точки на дорогах карты

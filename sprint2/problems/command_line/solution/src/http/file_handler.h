@@ -51,7 +51,6 @@ public:
     FileHandler(const FileHandler&) = delete;
     FileHandler& operator=(const FileHandler&) = delete;
 
-    bool IsApiRequest(std::string_view target);
     // Обработчик запросов к файловой системе
     FileRequestResult HandleFileRequest(const StringRequest& req) const;
 

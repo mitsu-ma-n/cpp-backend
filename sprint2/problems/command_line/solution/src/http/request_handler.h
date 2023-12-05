@@ -57,6 +57,9 @@ private:
     // Генератор сообщения об ошибке
     StringResponse ReportServerError(unsigned version, bool keep_alive) const;
 
+    StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
+                                      bool keep_alive, std::string_view content_type) const;
+
     ApiHandler api_handler_;
     FileHandler file_handler_;
 };

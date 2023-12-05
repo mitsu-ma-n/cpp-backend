@@ -26,7 +26,7 @@ SessionBase::SessionBase(tcp::socket&& socket)
 void SessionBase::Read() {
     using namespace std::literals;
     // Очищаем запрос от прежнего значения (метод Read может быть вызван несколько раз)
-    request_ = {};
+    request_.clear();
     stream_.expires_after(30s);
     // Считываем request_ из stream_, используя buffer_ для хранения считанных данных
     http::async_read(stream_, buffer_, request_,

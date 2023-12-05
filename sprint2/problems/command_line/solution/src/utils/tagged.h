@@ -48,6 +48,14 @@ public:
         return value_;
     }
 
+    const Value* operator->() const {
+        return &value_;
+    }
+
+    Value* operator->() {
+        return &value_;
+    }
+
     // Так в C++20 можно объявить оператор сравнения Tagged-типов
     // Будет просто вызван соответствующий оператор для поля value_
     auto operator<=>(const Tagged<Value, Tag>&) const = default;
