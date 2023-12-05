@@ -3,20 +3,13 @@ cmake_minimum_required(VERSION 3.11)
 project(game_server CXX)
 set(CMAKE_CXX_STANDARD 20)
 
+# обратите внимание на аргумент TARGETS у команды conan_basic_setup
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-
-# url поставляется в виде скомпилированной библиотеки
-# такие нужно подключать через COMPONENTS
-find_package(Boost 1.83.0 REQUIRED COMPONENTS url)
-if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
-endif()
+conan_basic_setup(TARGETS)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 add_compile_options(-g)
 
 add_executable(game_server
@@ -35,5 +28,6 @@ add_executable(game_server
 	src/request_handler.cpp
 	src/request_handler.h
 )
-target_link_libraries(game_server PRIVATE Threads::Threads)
-target_link_libraries(game_server PRIVATE Boost::url)
+# используем "импортированную" цель CONAN_PKG::boost
+target_include_directories(game_server PRIVATE CONAN_PKG::boost)
+target_link_libraries(game_server Threads::Threads CONAN_PKG::boost)
