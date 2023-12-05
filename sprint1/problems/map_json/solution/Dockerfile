@@ -24,6 +24,8 @@ RUN apt update && \
 # копируем conanfile.txt в контейнер и запускаем conan install
 COPY conanfile.txt /app/
 RUN mkdir /app/build && cd /app/build && \
+    conan profile new default --detect && \
+    conan profile update settings.compiler.libcxx=libstdc++11 default && \
     conan install .. --build=missing
 
 # только после этого копируем остальные иходники
