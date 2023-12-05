@@ -53,4 +53,4 @@ COPY ./static /app/static
 
 # Указываем точку входа: собранный и скопированный из контейнера build
 # веб-сервер, с указанием параметра config.json
-ENTRYPOINT ["/app/game_server", "/app/data/config.json", "/app/static"]
+ENTRYPOINT ["/app/game_server", "--config-file", "/app/data/config.json", "--www-root", "/app/static"]
