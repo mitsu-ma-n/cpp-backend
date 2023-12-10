@@ -36,6 +36,7 @@ namespace json_field {
     constexpr static char ERROR_MESSAGE[] = "message";
     // Logger
     constexpr static char LOGGER_TIMESTAMP[] = "timestamp";
+    constexpr static char LOGGER_THREAD[]    = "thread";
     constexpr static char LOGGER_DATA[]      = "data";
     constexpr static char LOGGER_MESSAGE[]   = "message";
     // Server
