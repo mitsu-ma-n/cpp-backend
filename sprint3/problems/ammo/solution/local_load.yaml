@@ -1,7 +1,7 @@
 overload:
   enabled: false                            # загрузка результатов в сервис-агрегатор https://overload.yandex.net/
 phantom:
-  address: localhost:80                     # адрес тестируемого приложения
+  address: localhost:8080                     # адрес тестируемого приложения
   ammofile: /var/loadtest/ammo.txt          # путь к файлу с патронами
   ammo_type: uri                            # тип запросов uripost для POST (или uri для GET)
   load_profile:

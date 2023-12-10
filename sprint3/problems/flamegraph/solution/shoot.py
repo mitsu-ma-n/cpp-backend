@@ -58,7 +58,7 @@ def run_in_shell(command, output=None):
 def run_flame_graph(perf_proc):
     while perf_proc.returncode is None:
         perf_proc.poll()
-    flame_graph = run_in_shell('sudo perf script | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg')
+    flame_graph = run_in_shell('sudo perf script -i perf.data | ./FlameGraph/stackcollapse-perf.pl | ./FlameGraph/flamegraph.pl > graph.svg')
     while flame_graph.returncode is None:
         flame_graph.poll()
 
