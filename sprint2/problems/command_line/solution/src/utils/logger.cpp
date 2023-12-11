@@ -3,8 +3,10 @@
 #include <boost/log/utility/setup/common_attributes.hpp>    // add_common_attributes()
 #include <boost/log/utility/setup/console.hpp>  // add_console_log()
 #include <boost/date_time.hpp>  // Для вывода момента времени
-
 #include <boost/json.hpp>
+
+#include <thread>
+
 #include "boost/json/serialize.hpp"
 #include "json_fields.h"
 
@@ -25,7 +27,7 @@ void InitBoostLogFilter() {
 }
 
 // tag_invoke должны быть определны в том же namespace, в котором определны классы,
-// которые ими обрабатываются. В наше случае это model
+// которые ими обрабатываются. 
 // сериализация сообщения логгера в JSON-значение
 namespace boost::log {
 void tag_invoke(json::value_from_tag, json::value& jv, logging::record_view const& rec)
@@ -49,8 +51,13 @@ void MyFormatter(logging::record_view const& rec, logging::formatting_ostream& s
     // Время
     auto ts = *rec[timestamp];
     jResponseObj[json_field::LOGGER_TIMESTAMP] = to_iso_extended_string(ts);
+    std::stringstream ss;
+    ss << *rec[thread_id];
+    jResponseObj[json_field::LOGGER_THREAD] = ss.str();
     // Дополнительная информация в формате json::value.
-    jResponseObj[json_field::LOGGER_DATA] = *rec[additional_data];
+    if ( auto val = rec[additional_data] ) {    // проверка на случай, если доп информация не указана
+        jResponseObj[json_field::LOGGER_DATA] = *val;
+    }
     // Выводим само сообщение.
     jResponseObj[json_field::LOGGER_MESSAGE] = *rec[logging::expressions::smessage];
 
