@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -8,6 +9,7 @@
 
 #include "tagged.h"
 #include "utils.h"
+#include "loot_generator.h"
 
 namespace model {
 
@@ -15,7 +17,7 @@ using DynamicDimension = double;    // Расстояние игровых ед�
 using DynamicCoord = DynamicDimension;
 using StartEndCoord = std::pair<DynamicDimension,DynamicDimension>;
 
-using TimeType = DynamicDimension;  // Время в секундах
+using TimeType = std::chrono::milliseconds;  // Время в миллисекундах
 
 struct Position {
     DynamicCoord x, y;
@@ -302,17 +304,56 @@ private:
     Direction direction_;
 };
 
+class Item {
+public:
+    using Id = util::Tagged<std::uint32_t, Item>;
+    using Type = int;
+
+    Item(Id id, Type type, Position position) noexcept
+    : id_{std::move(id)} 
+    , type_{type}
+    , position_{position} {
+    }
+
+    const Id& GetId() const noexcept {
+        return id_;
+    }
+
+    const Type& GetType() const noexcept {
+        return type_;
+    }
+
+    const Position& GetPosition() const noexcept {
+        return position_;
+    }
+
+    const std::string GetIdAsString() const noexcept {
+        return std::to_string(*id_);
+    }
+
+
+private:
+    Id id_;
+    Type type_;
+    Position position_;
+};
+
 class GameSession {
 public:
     using Dogs = std::vector<Dog*>;
+    using Items = std::vector<Item*>;
 
-    GameSession(const Map& map) noexcept
-        : map_{&map} {
+    GameSession(const Map& map, loot_gen::LootGenerator* loot_generator) noexcept
+        : map_{&map}
+        , loot_generator_{loot_generator} {
     }
 
     ~GameSession() {
         for (auto dog : dogs_) {
             delete dog;
+        }
+        for (auto item : items_) {
+            delete item;
         }
     }
 
@@ -322,18 +363,29 @@ public:
         return dogs_;
     }
 
+    Item* AddItem(Position pos, Item::Type& type);
+
+    const Items& GetItems() const noexcept {
+        return items_;
+    }
+
     const Map& GetMap() const noexcept {
         return *map_;
     }
 
     void Tick(TimeType dt) noexcept {
-        // Для всех собак сессии
+        // Перемещаем собак
         for (auto dog : dogs_) {
             // Находим новые координаты
             auto pos = MoveDog(*dog, dt);
             // и устанавливаем их
             dog->SetPosition(pos);
         }
+        // TODO: Генерируем предметы
+        size_t n_items = item_id_to_index_.size();
+        size_t n_dogs = dog_id_to_index_.size();
+        unsigned n_new_items = loot_generator_->Generate(dt, n_items, n_dogs);
+
     }
 
     const Dog* FindDog(const Dog::Id& id) const noexcept {
@@ -349,10 +401,16 @@ private:
 private:
     using DogIdHasher = util::TaggedHasher<Dog::Id>;
     using DogIdToIndex = std::unordered_map<Dog::Id, size_t, DogIdHasher>;
+    using ItemIdHasher = util::TaggedHasher<Item::Id>;
+    using ItemIdToIndex = std::unordered_map<Item::Id, size_t, ItemIdHasher>;
 
     Dogs dogs_;
+    Items items_;
     const Map* map_;
     DogIdToIndex dog_id_to_index_;
+    ItemIdToIndex item_id_to_index_;
+
+    loot_gen::LootGenerator* loot_generator_;
 };
 
 class Game {
@@ -360,8 +418,9 @@ public:
     using Maps = std::vector<Map>;
     using GameSessions = std::vector<GameSession*>;
 
-    Game(DynamicDimension dogSpeed = 1.0) noexcept
-        : defuault_dog_speed_{dogSpeed} {
+    Game(loot_gen::LootGeneratorInfo info, DynamicDimension dogSpeed = 1.0) noexcept
+        : loot_generator_(info.GetPeriodInMilliseconds(), info.GetProbability())
+        , defuault_dog_speed_{dogSpeed} {
     }
 
     ~Game() {
@@ -421,6 +480,8 @@ private:
 
     GameSessions sessions_;
     MapIdToIndex map_id_to_session_index_;
+
+    loot_gen::LootGenerator loot_generator_;
 };
 
 }  // namespace model

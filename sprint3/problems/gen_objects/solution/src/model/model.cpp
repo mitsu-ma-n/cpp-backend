@@ -6,7 +6,7 @@ namespace model {
 using namespace std::literals;
 
 Position operator*(Speed speed, TimeType dt) {
-    return Position{speed.ux * dt, speed.uy * dt};
+    return Position{speed.ux * dt.count(), speed.uy * dt.count()};
 }
 
 Position operator+(Position a, Position b) {
@@ -57,6 +57,26 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
     }
     return dogs_[index];
 }
+
+Item* GameSession::AddItem(Position pos, Item::Type& type) {
+    const size_t index = items_.size();  // Получаем незанятый индекс
+    // Пробуем добавить
+    if (auto [it, inserted] = item_id_to_index_.emplace(index, index); !inserted) {
+        throw std::invalid_argument("Item with id "s + std::to_string(index) + " already exists"s);
+    } else {
+        // Создаём на основе индекса и имени экземпляр собаки
+        Item* new_item = new Item(model::Item::Id(index), type, pos);
+        try {
+            items_.emplace_back(new_item);
+        } catch (...) {
+            item_id_to_index_.erase(it);
+            delete new_item;
+            throw;
+        }
+    }
+    return items_[index];
+}
+
 
 Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
     // Направление движения собаки
@@ -167,7 +187,7 @@ GameSession* Game::CreateSession(const Map::Id& map_id) {
         throw std::invalid_argument("Session for map with id "s + *map_id + " already exists"s);
     } else {
         // Создаём новую сессию, привязанную к указанной карте
-        GameSession* new_session = new GameSession(*map);
+        GameSession* new_session = new GameSession(*map, &loot_generator_);
         try {
             sessions_.emplace_back(new_session);
         } catch (...) {

@@ -124,7 +124,7 @@ int main(int argc, const char* argv[]) {
         if (args->is_dt_set) {
             // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
             auto ticker = std::make_shared<utils::Ticker>(api_strand, std::chrono::milliseconds(args->dt),
-                [&app](std::chrono::milliseconds delta) { app.ExecuteTick(delta.count()); }
+                [&app](std::chrono::milliseconds delta) { app.ExecuteTick(delta); }
             );
             ticker->Start();
         }
@@ -144,7 +144,6 @@ int main(int argc, const char* argv[]) {
         fs::path base_path{std::string(args->static_path)};
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        // TODO: пробросить дополнительно класс ExtraData???
         auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path, extra_data);
 
         // endpoint нужен и известен только внутри логгера, поэтому тут он не нужен

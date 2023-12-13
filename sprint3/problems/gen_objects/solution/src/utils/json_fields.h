@@ -5,7 +5,7 @@ namespace json_field {
     constexpr static char GAME_DEFAULT_DOG_SPEED[]     = "defaultDogSpeed";
     constexpr static char GAME_MAPS[]                  = "maps";
     constexpr static char GAME_LOOT_GENERATOR_CONFIG[] = "lootGeneratorConfig";
-    // LootGeneratorConfig
+    // LootGeneratorInfo
     constexpr static char LOOT_GENERATOR_CONFIG_PERIOD[]      = "period";
     constexpr static char LOOT_GENERATOR_CONFIG_PROBABILITY[] = "probability";
     // Map
@@ -27,6 +27,9 @@ namespace json_field {
     constexpr static char DOG_POSITION[]  = "pos";
     constexpr static char DOG_SPEED[]     = "speed";
     constexpr static char DOG_DIRECTION[] = "dir";
+    // Item
+    constexpr static char ITEM_TYPE[]      = "type";
+    constexpr static char ITEM_POSITION[]  = "pos";
     // Road
     constexpr static char ROAD_START_X[] = "x0";
     constexpr static char ROAD_START_Y[] = "y0";
@@ -77,6 +80,7 @@ namespace json_field {
     constexpr static char LIST_PLAYERS_NAME[]  = "name";
     // GetState
     constexpr static char GET_STATE_PLAYERS[]  = "players";
+    constexpr static char GET_STATE_LOOT[]     = "lostObjects";
     // PlayerActionParams
     constexpr static char PLAYER_ACTION_MOVE_DIRECTION[]  = "move";
     // TickParams

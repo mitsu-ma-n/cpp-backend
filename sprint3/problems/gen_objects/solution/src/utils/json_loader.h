@@ -18,21 +18,26 @@ namespace model {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Position const& pos);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Speed const& speed);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Dog const& dog);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Item const& item);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Map const& map);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, std::vector<Map> const& maps);
 } // namespace model
 
 namespace extra_data {
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, extra_data::ExtendedMap const& maps_loot_types);
-};
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, ExtendedMap const& maps_loot_types);
+}
+
+namespace loot_gen {
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, LootGeneratorInfo const& loot_gen_info);
+}
 
 namespace app {
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::JoinGameResult const& join_result);
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerInfo const& player);
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPlayersResult const& players_result);
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetStateResult const& state_result);
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerActionResult const& action_result);
-    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::TickResult const& action_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, JoinGameResult const& join_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, PlayerInfo const& player);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, ListPlayersResult const& players_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GetStateResult const& state_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, PlayerActionResult const& action_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, TickResult const& action_result);
 } // namespace app
 
 namespace json_loader {

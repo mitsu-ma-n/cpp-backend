@@ -1,8 +1,33 @@
 #pragma once
 #include <chrono>
+#include <cmath>
 #include <functional>
 
 namespace loot_gen {
+
+class LootGeneratorInfo {
+public:
+    LootGeneratorInfo(double period, double probability) 
+        : period_(period), probability_(probability) {
+    }
+
+    double GetPeriod() const noexcept {
+        return period_;
+    }
+
+    std::chrono::milliseconds GetPeriodInMilliseconds() const noexcept {
+        auto rounded = std::round(period_*1000);
+        return std::chrono::milliseconds{int(rounded)};
+    }
+
+    double GetProbability() const noexcept {
+        return probability_;
+    }
+
+private:
+    double period_;     // в секундах
+    double probability_;
+};
 
 /*
  *  Генератор трофеев

@@ -35,7 +35,16 @@ private:
     model::Dog dog_;
 };
 
-using GetStateResult = std::vector<StatePlayerInfo>;
+class GetStateResult {
+public:
+    using Players = std::vector<StatePlayerInfo>;
+    using Items = std::vector<model::Item*>;
+
+public:
+    Players players_;
+    Items items_;
+
+};
 
 class GetStateUseCase {
 public:

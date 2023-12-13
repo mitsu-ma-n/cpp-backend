@@ -426,7 +426,7 @@ StringResponse ApiHandler::GetTickResponse(const StringRequest& req, const std::
 
 http::status ApiHandler::ExecuteTick(TickParams params, std::string& response_body) {
     // Переводим dt из миллисекунд в секунды
-    app::Tick dt{params.dt/1000.0};
+    app::Tick dt{params.dt};
     app::TickResult res = app_.ExecuteTick(dt);
     response_body = boost::json::serialize(json::value_from(res));
     return http::status::ok;

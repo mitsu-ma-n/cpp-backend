@@ -13,6 +13,7 @@
 #include <string_view>
 
 #include "json_fields.h"
+#include "loot_generator.h"
 #include "model.h"
 #include "tick_use_case.h"
 
@@ -181,6 +182,15 @@ void tag_invoke(json::value_from_tag, json::value& jv, Dog const& dog)
     };
 }
 
+void tag_invoke(json::value_from_tag, json::value& jv, Item const& item)
+{
+    jv = {
+        {json_field::ITEM_TYPE, json::value_from(item.GetType())},
+        {json_field::DOG_SPEED, json::value_from(item.GetPosition())}
+    };
+}
+
+
 // сериализация экземпляра класса Map в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
 {
@@ -201,7 +211,7 @@ void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
     object[json_field::MAP_ROADS] = form_array(map.GetRoads());
     object[json_field::MAP_BUILDINGS] = form_array(map.GetBuildings());;
     object[json_field::MAP_OFFICES] = form_array(map.GetOffices());
-    // TODO: lootTypes
+
     jv.emplace_object() = object;
 }
 
@@ -227,20 +237,7 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
 } // namespace model
 
 namespace extra_data {
-/*
-LootType tag_invoke(json::value_to_tag<LootType>, json::value const& jv)
-{
-    json::object const& obj = jv.as_object();
-    return LootType ({
-        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_NAME))),
-        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_FILE))),
-        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_TYPE))),
-        value_to<int>(obj.at(std::string(json_field::LOOT_TYPES_ROTATION))),
-        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_COLOR))),
-        value_to<double>(obj.at(std::string(json_field::LOOT_TYPES_SCALE)))
-    });
-}
-*/
+
 ExtendedMap tag_invoke(json::value_to_tag<ExtendedMap>, json::value const& jv ) {
     json::object const& obj = jv.as_object();
 
@@ -262,19 +259,6 @@ ExtendedMap tag_invoke(json::value_to_tag<ExtendedMap>, json::value const& jv ) 
     
     return ex_map;
 }
-/*
-void tag_invoke(json::value_from_tag, json::value& jv, LootType const& loot_type)
-{
-    jv = {
-        {json_field::LOOT_TYPES_NAME, loot_type.name_},
-        {json_field::LOOT_TYPES_FILE, loot_type.file_},
-        {json_field::LOOT_TYPES_TYPE, loot_type.type_},
-        {json_field::LOOT_TYPES_ROTATION, loot_type.rotation_},
-        {json_field::LOOT_TYPES_COLOR, loot_type.color_},
-        {json_field::LOOT_TYPES_SCALE, loot_type.scale_}
-    };
-}
-*/
 
 // сериализация экземпляра класса ExtendedMap в JSON-значение
 void tag_invoke(json::value_from_tag, json::value& jv, ExtendedMap const& map)
@@ -296,13 +280,36 @@ void tag_invoke(json::value_from_tag, json::value& jv, ExtendedMap const& map)
     object[json_field::MAP_ROADS] = form_array(map.GetMap().GetRoads());
     object[json_field::MAP_BUILDINGS] = form_array(map.GetMap().GetBuildings());;
     object[json_field::MAP_OFFICES] = form_array(map.GetMap().GetOffices());
-    // TODO: lootTypes
+    
+    // lootTypes
     object[json_field::MAP_LOOT_TYPES] = map.GetLootTypes();
     
     jv.emplace_object() = object;
 }
 
 }   // namespace extra_data
+
+namespace loot_gen {
+
+LootGeneratorInfo tag_invoke(json::value_to_tag<LootGeneratorInfo>, json::value const& jv ) {
+    json::object const& obj = jv.as_object();
+
+    return LootGeneratorInfo {
+        value_to<double>(obj.at(std::string(json_field::LOOT_GENERATOR_CONFIG_PERIOD))),
+        value_to<double>(obj.at(std::string(json_field::LOOT_GENERATOR_CONFIG_PROBABILITY)))
+    };
+}
+
+void tag_invoke(json::value_from_tag, json::value& jv, LootGeneratorInfo const& loot_gen_info) {
+    json::object object;
+
+    object[json_field::LOOT_GENERATOR_CONFIG_PERIOD] = loot_gen_info.GetPeriod();
+    object[json_field::LOOT_GENERATOR_CONFIG_PROBABILITY] = loot_gen_info.GetProbability();
+   
+    jv.emplace_object() = object;
+}
+
+}   // namespace loot_gen 
 
 namespace app {
 
@@ -332,22 +339,27 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPl
         object[player_info.GetIdAsString().c_str()] = object_name;
     }
 
-    // TODO: lostObjects
-
     jv.emplace_object() = object;
 }
 
 void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetStateResult const& state_result) {
-    json::object object_players;    // Сводная информация об игроках свойство-объект
+    json::object object_state;    // Сводная информация об игроках свойство-объект
 
     json::object object_players_info;   // Объект информации об игроках
-    for (const auto& player_info : state_result) {
+    for (const auto& player_info : state_result.players_) {
         object_players_info[player_info.GetIdAsString()] = json::value_from(player_info.GetDog());
     }
 
-    object_players[json_field::GET_STATE_PLAYERS] = object_players_info;
+    object_state[json_field::GET_STATE_PLAYERS] = object_players_info;
 
-    jv.emplace_object() = object_players;
+    json::object object_items_info;   // Объект информации об игроках
+    for (const auto& item_info : state_result.items_) {
+        object_items_info[item_info->GetIdAsString()] = json::value_from(*item_info);
+    }
+
+    object_state[json_field::GET_STATE_LOOT] = object_items_info;
+
+    jv.emplace_object() = object_state;
 }
 
 void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerActionResult const& action_result) {
@@ -380,24 +392,25 @@ JoinParams tag_invoke(json::value_to_tag<JoinParams>, json::value const& jv)
 
 namespace json_loader {
 
-// TODO: возврат вместе с Game ещё и ExtraData?
 std::pair<Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path& json_path) {
     // Загрузить содержимое файла json_path в виде строки
     std::ifstream ifs(json_path);
     std::string input(std::istreambuf_iterator<char>(ifs), {});
     
-    // Создаём пустую игру
-    Game game;
-    extra_data::MapsLootTypes lootTypes;
-
     // Распарсить строку как JSON, используя boost::json::parse
     // Получаем json-объект из строки (тип value)
     auto parsed_config_json = json::parse(input);
     auto obj = parsed_config_json.as_object();
 
-    game.SetDefaultDogSpeed(value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED))));
+    // загрузка скорости пса
+    auto default_dog_speed = value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED)));
 
-    // TODO: загрузка lootGeneratorConfig
+    // загрузка lootGeneratorConfig
+    auto loot_gen_info = boost::json::value_to<loot_gen::LootGeneratorInfo>(obj.at(std::string(json_field::GAME_LOOT_GENERATOR_CONFIG)));
+
+    // Создаём пустую игру
+    Game game(loot_gen_info, default_dog_speed);
+    extra_data::MapsLootTypes lootTypes;
 
     // Добавляем карты в игру
     auto maps = value_to<std::vector<extra_data::ExtendedMap>>(obj.at(std::string(json_field::GAME_MAPS)));
@@ -447,7 +460,7 @@ bool ReadTickParamsFromString(http_handler::TickParams& params, std::string str)
         throw std::runtime_error("Time delta must be int64");
     }
 
-    params.dt = value_to<int>(val);
+    params.dt = TimeType(value_to<unsigned>(val));
 
     return true;
 }

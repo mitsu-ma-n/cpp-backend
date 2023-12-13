@@ -2,6 +2,7 @@
 
 #include <boost/json/conversion.hpp>
 #include <boost/beast/http.hpp>
+#include <chrono>
 
 namespace http_handler {
 
@@ -18,7 +19,7 @@ public:
 
 class TickParams {
 public:
-    unsigned long dt;   // в миллисекундах
+    std::chrono::milliseconds dt;   // в миллисекундах
 };
 
 namespace beast = boost::beast;
