@@ -8,25 +8,27 @@
 
 namespace app {
 
+// Класс реализует хранение допустимых действий игрока
+// и преобразование их в различное представление
 class PlayerAction {
 public:
     PlayerAction(std::string move) 
         : move_(std::move(move)) {
         }
 
-    std::string GetMove() const {
+    std::string GetMoveAsString() const {
         return move_;
     }
 
     std::optional<model::Direction> GetMoveAsDirection() const {
-        if (this->IsValid()) {
+        if (this->IsDirection()) {
             return model::Direction(move_[0]);
         }
         return std::nullopt;
     }
 
 
-    bool IsValid() const {
+    bool IsDirection() const {
         // Список допустимых направлений
         std::set<std::string> valid_directions = {
             {(char)model::Direction::NORTH}, 
@@ -35,6 +37,11 @@ public:
             {(char)model::Direction::WEST}
         };
         return valid_directions.find(move_) != valid_directions.end();
+    }
+
+    bool IsStop() const {
+        using namespace std::string_literals;
+        return move_ == ""s;
     }
 
 private:

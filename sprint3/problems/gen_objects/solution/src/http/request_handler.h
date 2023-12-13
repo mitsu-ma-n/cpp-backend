@@ -1,5 +1,6 @@
 #pragma once
 
+#include "extra_data.h"
 #include "http_server.h"
 #include "api_handler.h"
 #include "file_handler.h"
@@ -10,8 +11,8 @@ class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
 
-    explicit RequestHandler(Strand api_strand, app::Application& app, fs::path path)
-        : api_handler_{api_strand, app}
+    explicit RequestHandler(Strand api_strand, app::Application& app, fs::path path, extra_data::MapsLootTypes& extra_data)
+        : api_handler_{api_strand, app, extra_data}
         , file_handler_{path} {
     }
 

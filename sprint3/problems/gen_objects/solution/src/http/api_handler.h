@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 
+#include "extra_data.h"
 #include "http_server.h"
 #include "model.h"
 #include "http_handler_types.h"
@@ -23,9 +24,10 @@ class ApiHandler : public std::enable_shared_from_this<ApiHandler> {
 public:
     using Strand = net::strand<net::io_context::executor_type>;
 
-    explicit ApiHandler(Strand api_strand, app::Application& app)
+    explicit ApiHandler(Strand api_strand, app::Application& app, extra_data::MapsLootTypes& extra_data)
         : api_strand_{api_strand}
-        , app_{app} {
+        , app_{app}
+        , extra_data_{extra_data} {
     }
 
     ApiHandler(const ApiHandler&) = delete;
@@ -79,6 +81,6 @@ private:
 
     Strand api_strand_;
     app::Application& app_;
-};
+    extra_data::MapsLootTypes& extra_data_;};
 
 }  // namespace http_handler

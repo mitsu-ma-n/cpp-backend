@@ -4,6 +4,7 @@
 #include "api_handler.h"
 #include "boost/json/value_to.hpp"
 // Позволяет загрузить содержимое файла в виде строки:
+#include <boost/json/serialize.hpp>
 #include <boost/json/value_from.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -200,6 +201,7 @@ void tag_invoke(json::value_from_tag, json::value& jv, Map const& map)
     object[json_field::MAP_ROADS] = form_array(map.GetRoads());
     object[json_field::MAP_BUILDINGS] = form_array(map.GetBuildings());;
     object[json_field::MAP_OFFICES] = form_array(map.GetOffices());
+    // TODO: lootTypes
     jv.emplace_object() = object;
 }
 
@@ -223,6 +225,84 @@ void tag_invoke(json::value_from_tag, json::value& jv, std::vector<Map> const& m
 }
 
 } // namespace model
+
+namespace extra_data {
+/*
+LootType tag_invoke(json::value_to_tag<LootType>, json::value const& jv)
+{
+    json::object const& obj = jv.as_object();
+    return LootType ({
+        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_NAME))),
+        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_FILE))),
+        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_TYPE))),
+        value_to<int>(obj.at(std::string(json_field::LOOT_TYPES_ROTATION))),
+        value_to<std::string>(obj.at(std::string(json_field::LOOT_TYPES_COLOR))),
+        value_to<double>(obj.at(std::string(json_field::LOOT_TYPES_SCALE)))
+    });
+}
+*/
+ExtendedMap tag_invoke(json::value_to_tag<ExtendedMap>, json::value const& jv ) {
+    json::object const& obj = jv.as_object();
+
+    // Конструируем карту
+    Map map {
+        Map::Id(value_to<std::string>(obj.at(std::string(json_field::MAP_ID)))),
+        value_to<std::string>(obj.at(std::string(json_field::MAP_NAME))) 
+    };
+
+    if( auto it = obj.find(json_field::MAP_DOG_SPEED); it != obj.end() ) {
+        map.SetDogSpeed(value_to<double>(it->value()));
+    }
+
+    ExtendedMap ex_map{std::move(map),obj.at(std::string(json_field::MAP_LOOT_TYPES)).as_array()};
+
+    AddRoads(*ex_map.GetMapPointer(),obj);
+    AddBuildings(*ex_map.GetMapPointer(),obj);
+    AddOffices(*ex_map.GetMapPointer(),obj);
+    
+    return ex_map;
+}
+/*
+void tag_invoke(json::value_from_tag, json::value& jv, LootType const& loot_type)
+{
+    jv = {
+        {json_field::LOOT_TYPES_NAME, loot_type.name_},
+        {json_field::LOOT_TYPES_FILE, loot_type.file_},
+        {json_field::LOOT_TYPES_TYPE, loot_type.type_},
+        {json_field::LOOT_TYPES_ROTATION, loot_type.rotation_},
+        {json_field::LOOT_TYPES_COLOR, loot_type.color_},
+        {json_field::LOOT_TYPES_SCALE, loot_type.scale_}
+    };
+}
+*/
+
+// сериализация экземпляра класса ExtendedMap в JSON-значение
+void tag_invoke(json::value_from_tag, json::value& jv, ExtendedMap const& map)
+{
+    auto form_array = [](auto container){
+        json::array arr;
+        for (const auto& item : container) {
+            arr.push_back(json::value_from(item));
+        }
+        return arr;
+    };
+
+    json::object object;
+    // Записываем сводную информацию
+    object[json_field::MAP_ID] = *map.GetMap().GetId();
+    object[json_field::MAP_NAME] = map.GetMap().GetName();
+
+    // Теперь нужно писать массивы
+    object[json_field::MAP_ROADS] = form_array(map.GetMap().GetRoads());
+    object[json_field::MAP_BUILDINGS] = form_array(map.GetMap().GetBuildings());;
+    object[json_field::MAP_OFFICES] = form_array(map.GetMap().GetOffices());
+    // TODO: lootTypes
+    object[json_field::MAP_LOOT_TYPES] = map.GetLootTypes();
+    
+    jv.emplace_object() = object;
+}
+
+}   // namespace extra_data
 
 namespace app {
 
@@ -251,6 +331,8 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::ListPl
         // Записываем сводную информацию
         object[player_info.GetIdAsString().c_str()] = object_name;
     }
+
+    // TODO: lostObjects
 
     jv.emplace_object() = object;
 }
@@ -298,13 +380,15 @@ JoinParams tag_invoke(json::value_to_tag<JoinParams>, json::value const& jv)
 
 namespace json_loader {
 
-Game LoadGame(const std::filesystem::path& json_path) {
+// TODO: возврат вместе с Game ещё и ExtraData?
+std::pair<Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path& json_path) {
     // Загрузить содержимое файла json_path в виде строки
     std::ifstream ifs(json_path);
     std::string input(std::istreambuf_iterator<char>(ifs), {});
     
     // Создаём пустую игру
     Game game;
+    extra_data::MapsLootTypes lootTypes;
 
     // Распарсить строку как JSON, используя boost::json::parse
     // Получаем json-объект из строки (тип value)
@@ -313,16 +397,20 @@ Game LoadGame(const std::filesystem::path& json_path) {
 
     game.SetDefaultDogSpeed(value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED))));
 
+    // TODO: загрузка lootGeneratorConfig
+
     // Добавляем карты в игру
-    auto maps = value_to<std::vector<Map>>(obj.at(std::string(json_field::GAME_MAPS)));
-    for (auto map : maps) {
+    auto maps = value_to<std::vector<extra_data::ExtendedMap>>(obj.at(std::string(json_field::GAME_MAPS)));
+    for (auto ex_map : maps) {
+        auto map = ex_map.GetMap();
         if(!map.GetDogSpeed()) {
             map.SetDogSpeed(game.GetDefaultDogSpeed());
         }
-        game.AddMap(map);
+        lootTypes.emplace(map.GetId(), std::move(ex_map.GetLootTypes()));
+        game.AddMap(std::move(map));
     }
    
-    return game;
+    return {std::move(game), std::move(lootTypes)};
 }
 
 bool ReadJoinParamsFromString(http_handler::JoinParams& params, std::string str) {

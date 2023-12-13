@@ -155,10 +155,11 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name) noexcept
+    Map(Id id, std::string name, unsigned int n_loot_types = 0) noexcept
         : id_{std::move(id)}
         , name_{std::move(name)}
-        , dog_speed_{std::nullopt} {
+        , dog_speed_{std::nullopt}
+        , n_loot_types_{n_loot_types} {
     }
 
     const Id& GetId() const noexcept {
@@ -199,14 +200,13 @@ public:
 
     void AddOffice(const Office& office);
 
-public:
-
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
     Id id_;
     std::string name_;
     std::optional<DynamicDimension> dog_speed_;
+    unsigned int n_loot_types_;
 
     Roads roads_;
     Buildings buildings_;

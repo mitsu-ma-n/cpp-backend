@@ -9,6 +9,7 @@
 #include "state_use_case.h"
 #include "player_use_case.h"
 #include "tick_use_case.h"
+#include "extra_data.h"
 
 namespace model {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Office const& office);
@@ -21,6 +22,10 @@ namespace model {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, std::vector<Map> const& maps);
 } // namespace model
 
+namespace extra_data {
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, extra_data::ExtendedMap const& maps_loot_types);
+};
+
 namespace app {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::JoinGameResult const& join_result);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::PlayerInfo const& player);
@@ -31,7 +36,7 @@ namespace app {
 } // namespace app
 
 namespace json_loader {
-    model::Game LoadGame(const std::filesystem::path& json_path);
+    std::pair<model::Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path& json_path);
     bool ReadJoinParamsFromString(http_handler::JoinParams& params, std::string str);
     bool ReadPlayerActionParamsFromString(http_handler::PlayerActionParams& params, std::string str);
     bool ReadTickParamsFromString(http_handler::TickParams& params, std::string str);

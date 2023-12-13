@@ -465,8 +465,10 @@ http::status ApiHandler::GetMap(std::string& response, const std::vector<std::st
     auto map_id = segments[api_strings::LVL3_POS];
     // ищем карту
     for (const auto& map : app_.ListMaps()) {
-        if (*map.GetId() == map_id) {   // Нашли карту
-            response = serialize(json::value_from( map ));
+        auto self_map_id = map.GetId();
+        if (*self_map_id == map_id) {   // Нашли карту
+            extra_data::ExtendedMap ex_map{map, extra_data_[self_map_id]};
+            response = serialize(json::value_from( ex_map ));
             return http::status::ok;
         }
     }

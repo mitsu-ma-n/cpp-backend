@@ -27,6 +27,8 @@ add_executable(game_server
 	src/app/state_use_case.h
 	src/app/tick_use_case.cpp
 	src/app/tick_use_case.h
+	src/extra_data/extra_data.cpp
+	src/extra_data/extra_data.h
 	src/http/api_handler.cpp
 	src/http/api_handler.h
 	src/http/file_handler.cpp
@@ -58,20 +60,24 @@ add_executable(game_server
 	src/server_params.h
 )
 
-target_include_directories(game_server PRIVATE src src/app src/http src/model src/utils)
+target_include_directories(game_server PRIVATE src src/app src/extra_data src/http src/model src/utils)
 
 # используем "импортированную" цель CONAN_PKG::boost
 target_include_directories(game_server PRIVATE CONAN_PKG::boost)
 target_link_libraries(game_server Threads::Threads CONAN_PKG::boost)
 
-add_executable(tests
-	tests/loot_generator_tests.cpp
+add_executable(game_server_tests
+	src/model/model.h
+	src/model/model.cpp
 	src/utils/loot_generator.cpp
 	src/utils/loot_generator.h
+	src/utils/tagged.h
+	tests/loot_generator_tests.cpp
+	tests/model_tests.cpp
 )
 
-target_include_directories(game_server PRIVATE src/utils)
+target_include_directories(game_server_tests PRIVATE src/utils)
 
-target_include_directories(tests PRIVATE CONAN_PKG::catch2)
-target_link_libraries(tests PRIVATE CONAN_PKG::catch2)
+target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2)
 

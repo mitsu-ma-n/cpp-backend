@@ -107,7 +107,7 @@ int main(int argc, const char* argv[]) {
         }
 
         // 1. Загружаем карту из файла и построить модель игры
-        model::Game game = json_loader::LoadGame(args->config_file);
+        auto [game,extra_data] = json_loader::LoadGame(args->config_file);
 
         // 2. Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
@@ -144,7 +144,8 @@ int main(int argc, const char* argv[]) {
         fs::path base_path{std::string(args->static_path)};
 
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
-        auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path);
+        // TODO: пробросить дополнительно класс ExtraData???
+        auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path, extra_data);
 
         // endpoint нужен и известен только внутри логгера, поэтому тут он не нужен
         http_handler::LoggingRequestHandler logging_handler{ [handler](auto&& req, auto&& send) {

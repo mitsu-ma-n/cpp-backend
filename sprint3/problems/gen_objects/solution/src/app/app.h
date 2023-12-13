@@ -28,7 +28,7 @@ public:
     model::Game::Maps ListMaps();
     // Выдаёт ссылку на карту по её ID
     const model::Map& FindMap(std::string map_id);
-    // Подключает игрока к указанной карте @todo: Какого игрока???
+    // Подключает игрока к указанной карте
     JoinGameResult JoinGame(std::string user_name, std::string map_id);
     // Для игрока с заданным токеном получает список играющих с ним игроков
     ListPlayersResult GetPlayers(std::string_view token);
