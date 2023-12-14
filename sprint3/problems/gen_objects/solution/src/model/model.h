@@ -157,7 +157,7 @@ public:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name, unsigned int n_loot_types = 0) noexcept
+    Map(Id id, std::string name, unsigned int n_loot_types = 1) noexcept
         : id_{std::move(id)}
         , name_{std::move(name)}
         , dog_speed_{std::nullopt}
@@ -200,7 +200,18 @@ public:
         dog_speed_ = dog_speed;
     }
 
+    unsigned int GetNLootTypes() const noexcept {
+        return n_loot_types_;
+    }
+
+    void SetNLootTypes(unsigned int n_loot_types) {
+        n_loot_types_ = n_loot_types;
+    }
+
+
     void AddOffice(const Office& office);
+    Position GetRandomPointOnMap() const;
+
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
@@ -385,6 +396,13 @@ public:
         size_t n_items = item_id_to_index_.size();
         size_t n_dogs = dog_id_to_index_.size();
         unsigned n_new_items = loot_generator_->Generate(dt, n_items, n_dogs);
+        for (unsigned i = 0; i < n_new_items; ++i) {
+            //
+            Item::Type rand_type = std::rand() % map_->GetNLootTypes();
+            Position pos = map_->GetRandomPointOnMap();
+            AddItem(pos, rand_type);
+        }
+        
 
     }
 

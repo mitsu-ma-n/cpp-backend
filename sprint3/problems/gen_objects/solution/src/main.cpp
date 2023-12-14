@@ -122,7 +122,7 @@ int main(int argc, const char* argv[]) {
         app::Application app(game);
 
         if (args->is_dt_set) {
-            // Настраиваем вызов метода Application::Tick каждые 50 миллисекунд внутри strand
+            // Настраиваем вызов метода Application::ExecuteTick каждые args->dt миллисекунд внутри strand
             auto ticker = std::make_shared<utils::Ticker>(api_strand, std::chrono::milliseconds(args->dt),
                 [&app](std::chrono::milliseconds delta) { app.ExecuteTick(delta); }
             );

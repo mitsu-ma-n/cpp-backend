@@ -186,7 +186,7 @@ void tag_invoke(json::value_from_tag, json::value& jv, Item const& item)
 {
     jv = {
         {json_field::ITEM_TYPE, json::value_from(item.GetType())},
-        {json_field::DOG_SPEED, json::value_from(item.GetPosition())}
+        {json_field::ITEM_POSITION, json::value_from(item.GetPosition())}
     };
 }
 
@@ -419,7 +419,10 @@ std::pair<Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path&
         if(!map.GetDogSpeed()) {
             map.SetDogSpeed(game.GetDefaultDogSpeed());
         }
-        lootTypes.emplace(map.GetId(), std::move(ex_map.GetLootTypes()));
+        auto map_loot_types = ex_map.GetLootTypes();
+        auto n_loot_types = map_loot_types.size();
+        lootTypes.emplace(map.GetId(), std::move(map_loot_types));
+        map.SetNLootTypes(n_loot_types);
         game.AddMap(std::move(map));
     }
    

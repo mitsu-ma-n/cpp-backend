@@ -27,7 +27,7 @@ public:
         : game_{&game} {
     }
 
-    // Получаем карту по её Id. @todo: Поработать с типом возвращаемого значения
+    // Получаем карту по её Id
     const model::Map& GetMap(const model::Map::Id &id) {
         return *game_->FindMap(id);
     }

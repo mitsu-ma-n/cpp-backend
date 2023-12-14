@@ -78,6 +78,6 @@ add_executable(game_server_tests
 
 target_include_directories(game_server_tests PRIVATE src/utils)
 
-target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2)
-target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2)
+target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
+target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
 
