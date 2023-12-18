@@ -23,14 +23,18 @@ struct Position {
     DynamicCoord x, y;
 };
 
+bool operator==(Position a, Position b);
+bool operator!=(Position a, Position b);
+Position operator+(Position a, Position b);
+
 struct Speed {
     DynamicDimension ux, uy;
 };
 
+bool operator==(Speed a, Speed b);
+bool operator!=(Speed a, Speed b);
+
 Position operator*(Speed speed, TimeType dt);
-Position operator+(Position a, Position b);
-bool operator==(Position a, Position b);
-bool operator!=(Position a, Position b);
 
 using Dimension = int;
 using Coord = Dimension;

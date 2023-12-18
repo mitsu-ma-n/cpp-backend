@@ -22,6 +22,15 @@ bool operator!=(Position a, Position b) {
     return !(a == b);
 }
 
+bool operator==(Speed a, Speed b) {
+    const DynamicDimension eps = 1.e-14;
+    return (a.ux - b.ux) * (a.ux - b.ux) + (a.uy - b.uy) * (a.uy - b.uy) < eps;
+}
+
+bool operator!=(Speed a, Speed b) {
+    return !(a == b);
+}
+
 void Map::AddOffice(const Office& office) {
     if (warehouse_id_to_index_.contains(office.GetId())) {
         throw std::invalid_argument("Duplicate warehouse");
