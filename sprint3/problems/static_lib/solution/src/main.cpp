@@ -19,7 +19,7 @@
 #include "request_handler_logging.h"
 #include "json_fields.h"
 #include "app.h"
-#include "utils.h"
+#include "ticker.h"
 
 using namespace std::literals;
 namespace net = boost::asio;
