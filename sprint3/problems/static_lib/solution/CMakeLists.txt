@@ -11,7 +11,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # Добавляем библиотеку моедли, указывая, что она статическая.
-add_library(Model STATIC 
+add_library(model STATIC 
 	src/model/model.h
 	src/model/model.cpp
 	src/utils/loot_generator.cpp
@@ -22,7 +22,9 @@ add_library(Model STATIC
 	src/utils/write_adapter.h
 )
 
-add_executable(game_server
+target_include_directories(model PUBLIC src/model src/utils)
+
+add_library(app STATIC 
 	src/app/app.cpp
 	src/app/app.h
 	src/app/join_use_case.cpp
@@ -41,6 +43,12 @@ add_executable(game_server
 	src/app/tick_use_case.h
 	src/extra_data/extra_data.cpp
 	src/extra_data/extra_data.h
+)
+
+target_include_directories(app PUBLIC src src/app src/model src/extra_data src/utils CONAN_PKG::boost)
+target_link_libraries(app PUBLIC CONAN_PKG::boost)
+
+add_library(http STATIC 
 	src/http/api_handler.cpp
 	src/http/api_handler.h
 	src/http/file_handler.cpp
@@ -53,43 +61,44 @@ add_executable(game_server
 	src/http/request_handler_logging.h
 	src/http/request_handler.cpp
 	src/http/request_handler.h
-	src/model/model.cpp
-	src/model/model.h
+	src/server_params.h
+	src/sdk.h
+)
+
+target_include_directories(http PUBLIC src src/app src/http src/model src/utils src/extra_data CONAN_PKG::boost)
+target_link_libraries(http PUBLIC CONAN_PKG::boost)
+
+add_library(utils STATIC 
 	src/utils/boost_json.cpp
 	src/utils/json_fields.h
 	src/utils/json_loader.cpp
 	src/utils/json_loader.h
 	src/utils/logger.cpp
 	src/utils/logger.h
-	src/utils/loot_generator.cpp
-	src/utils/loot_generator.h
-	src/utils/tagged.h
-	src/utils/utils.cpp
-	src/utils/utils.h
-	src/utils/write_adapter.h
-	src/main.cpp
-	src/sdk.h
-	src/server_params.h
 )
 
-target_include_directories(game_server PRIVATE src src/app src/extra_data src/http src/model src/utils)
+target_include_directories(utils PUBLIC src src/model src/utils src/http src/app src/extra_data CONAN_PKG::boost)
+target_link_libraries(utils PUBLIC CONAN_PKG::boost)
+
+add_executable(game_server
+	src/main.cpp
+)
 
 # используем "импортированную" цель CONAN_PKG::boost
-target_include_directories(game_server PRIVATE CONAN_PKG::boost)
-target_link_libraries(game_server Threads::Threads CONAN_PKG::boost)
+# target_include_directories(game_server PRIVATE CONAN_PKG::boost)
+target_link_libraries(game_server app http utils model Threads::Threads)
+
+
+include(CTest)
+include(Catch)
+include(${CONAN_BUILD_DIRS_CATCH2}/Catch.cmake)
 
 add_executable(game_server_tests
-	src/model/model.h
-	src/model/model.cpp
-	src/utils/loot_generator.cpp
-	src/utils/loot_generator.h
-	src/utils/tagged.h
 	tests/loot_generator_tests.cpp
 	tests/model_tests.cpp
 )
 
-target_include_directories(game_server_tests PRIVATE src/utils)
+# target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
+target_link_libraries(game_server_tests model CONAN_PKG::catch2 CONAN_PKG::boost)
 
-target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
-target_link_libraries(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
-
+catch_discover_tests(game_server_tests)
