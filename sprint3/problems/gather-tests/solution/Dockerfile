@@ -17,7 +17,7 @@ COPY ./tests /app/tests
 COPY CMakeLists.txt /app/
 
 RUN cd /app/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DFindGatherEvents=FindGatherEvents_Wrong1 .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
     cmake --build . && ls
 
 ENTRYPOINT ["/app/build/collision_detection_tests"]

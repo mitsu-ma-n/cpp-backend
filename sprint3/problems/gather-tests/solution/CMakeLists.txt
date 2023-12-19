@@ -9,9 +9,6 @@ conan_basic_setup(TARGETS)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-# Закомментировать для локальной сборки и отладки
-add_compile_definitions(FindGatherEvents=${FindGatherEvents})
-
 add_library(collision_detection_lib STATIC
 	src/collision_detector.h
 	src/collision_detector.cpp
