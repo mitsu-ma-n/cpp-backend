@@ -14,11 +14,11 @@ find_package(Threads REQUIRED)
 add_library(model STATIC 
 	src/model/model.h
 	src/model/model.cpp
+	src/model/utils.cpp
+	src/model/utils.h
 	src/utils/loot_generator.cpp
 	src/utils/loot_generator.h
 	src/utils/tagged.h
-	src/utils/utils.cpp
-	src/utils/utils.h
 	src/utils/write_adapter.h
 )
 
@@ -75,6 +75,7 @@ add_library(utils STATIC
 	src/utils/json_loader.h
 	src/utils/logger.cpp
 	src/utils/logger.h
+	src/utils/ticker.h
 )
 
 target_include_directories(utils PUBLIC src src/model src/utils src/http src/app src/extra_data CONAN_PKG::boost)
