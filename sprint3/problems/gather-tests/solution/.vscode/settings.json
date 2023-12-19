@@ -1,0 +1,4 @@
+{
+    "cmake.buildDirectory" : "${workspaceRoot}/build-${variant:buildType}"
+    //"cmake.buildDirectory" : "${workspaceRoot}/build"
+}
