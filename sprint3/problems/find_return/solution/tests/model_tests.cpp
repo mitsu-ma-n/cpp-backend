@@ -10,7 +10,7 @@
 using namespace model;
 
 // Test cases for the Dog class
-TEST_CASE("Dog") {
+SCENARIO("Dog") {
     // Test case 1: Check if the dog's ID is set correctly
     SECTION("ID") {
         Dog::Id id{0};

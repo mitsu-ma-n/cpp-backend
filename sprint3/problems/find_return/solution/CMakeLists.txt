@@ -70,6 +70,9 @@ target_link_libraries(http PUBLIC CONAN_PKG::boost)
 
 add_library(utils STATIC 
 	src/utils/boost_json.cpp
+	src/utils/collision_detector.h
+	src/utils/collision_detector.cpp
+	src/utils/geom.h
 	src/utils/json_fields.h
 	src/utils/json_loader.cpp
 	src/utils/json_loader.h
@@ -95,11 +98,13 @@ include(Catch)
 include(${CONAN_BUILD_DIRS_CATCH2}/Catch.cmake)
 
 add_executable(game_server_tests
+	tests/tests_main.cpp
+	tests/collision-detector-tests.cpp
 	tests/loot_generator_tests.cpp
 	tests/model_tests.cpp
 )
 
-# target_include_directories(game_server_tests PRIVATE CONAN_PKG::catch2 CONAN_PKG::boost)
-target_link_libraries(game_server_tests model CONAN_PKG::catch2 CONAN_PKG::boost)
+# target_include_directories(game_server_tests PRIVATE src/utils)
+target_link_libraries(game_server_tests model CONAN_PKG::catch2 utils)
 
 catch_discover_tests(game_server_tests)
