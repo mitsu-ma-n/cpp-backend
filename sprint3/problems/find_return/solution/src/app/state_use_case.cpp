@@ -1,5 +1,6 @@
 #include "state_use_case.h"
 #include <stdexcept>
+#include <vector>
 
 namespace app {
 
@@ -16,7 +17,9 @@ GetStateResult GetStateUseCase::GetState(Token token) {
         for ( auto dog : dogs ) {
             auto dog_name = dog->GetName();
             auto player = players_->FinByDog(*dog);
-            res.players_.push_back({player->GetId(), *dog});
+            std::vector<model::Item*> items = session->GetItems();
+            StatePlayerInfo info{player->GetId(), *dog, items};
+            res.players_.push_back(info);
         }
 
         // Для карты выдаём список лута на ней

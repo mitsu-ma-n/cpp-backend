@@ -16,9 +16,10 @@ struct GetStateError {
 
 class StatePlayerInfo {
 public:
-    StatePlayerInfo(Player::Id id, model::Dog& dog) 
+    StatePlayerInfo(Player::Id id, model::Dog& dog, std::vector<model::Item*>& items) 
         : id_{id}
-        , dog_{dog} {
+        , dog_{dog}
+        , items_{items} {
     }
 
     std::string GetIdAsString() const {
@@ -29,10 +30,14 @@ public:
         return dog_;
     }
 
+    const std::vector<model::Item*>& GetItems() const {
+        return items_;
+    }
 
 private:
     Player::Id id_;
     model::Dog dog_;
+    std::vector<model::Item*> items_;
 };
 
 class GetStateResult {

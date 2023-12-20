@@ -16,6 +16,7 @@ class Player {
 public:
     using Id = util::Tagged<int, Player>;
     using Name = util::Tagged<std::string, Player>;
+    using Bag = std::vector<model::Item*>;
 
     Player(Id id, model::Dog& dog, model::GameSession& session) noexcept
         : id_{id}
@@ -40,6 +41,18 @@ public:
         return session_;
     }
 
+    Bag GetBag() {
+        return bag_;
+    }
+
+    void TakeItem(model::Item* item) {
+        bag_.push_back(item);
+    }
+
+    void ClearBag() {
+        bag_.clear();
+    }
+
 private:
     Id id_;
     Name name_;
@@ -48,6 +61,8 @@ private:
     model::GameSession* session_;
     // Собака, которой управляет игрок
     model::Dog* dog_;
+    // Рюкзак игрока
+    Bag bag_;
 };
 
 ///  ---  PlayerTokens  ---  ///

@@ -19,6 +19,8 @@ namespace model {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Speed const& speed);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Dog const& dog);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Item const& item);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Item* const& item);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, ItemInBag<Item> const& item);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Map const& map);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, std::vector<Map> const& maps);
 } // namespace model

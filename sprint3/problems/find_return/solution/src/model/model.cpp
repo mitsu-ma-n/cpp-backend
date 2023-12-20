@@ -1,5 +1,6 @@
 #include "model.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace model {
@@ -29,6 +30,30 @@ bool operator==(Speed a, Speed b) {
 
 bool operator!=(Speed a, Speed b) {
     return !(a == b);
+}
+
+bool operator==(Point a, Point b) {
+    return a.x == b.x && a.y == b.y;
+}
+
+bool operator!=(Point a, Point b) {
+    return !(a == b);
+}
+
+bool operator<(Point a, Point b) {
+    return a.x < b.x;
+}
+
+bool operator==(Road a, Road b) {
+    return a.GetStart() == b.GetStart() && a.GetEnd() == b.GetEnd();
+}
+
+bool operator!=(Road a, Road b) {
+    return !(a == b);
+}
+
+bool operator<(Road a, Road b) {
+    return a.GetStart() < b.GetStart();
 }
 
 void Map::AddOffice(const Office& office) {
@@ -114,91 +139,110 @@ Item* GameSession::AddItem(Position pos, Item::Type& type) {
     return items_[index];
 }
 
+bool isPointOnRoad(Position pos, const Road& road) {
+    auto ox = road.GetOxProjection();
+    auto oy = road.GetOyProjection();
+    return pos.x >= ox.first && pos.x <= ox.second && pos.y >= oy.first && pos.y <= oy.second;
+}
+
+struct Move {
+    Position pos;
+    DynamicCoord path;
+};
+
+Move GetMoveOnRoad(Position start_pos, Position end_pos, Road road) {
+    StartEndCoord oxMove = {std::min(start_pos.x, end_pos.x), std::max(start_pos.x, end_pos.x)};
+    StartEndCoord oyMove = {std::min(start_pos.y, end_pos.y), std::max(start_pos.y, end_pos.y)};
+
+    DynamicCoord start, end;
+    StartEndCoord roadProjection;
+
+    bool isHorizontal = oxMove.second-oxMove.first > oyMove.second-oyMove.first;
+    // Уходим на прямую
+    if (isHorizontal) {  // Перемещение по X
+        start = start_pos.x;
+        end = end_pos.x;
+        roadProjection = road.GetOxProjection();
+    } else {    // Перемещение по Y
+        start = start_pos.y;
+        end = end_pos.y;
+        roadProjection = road.GetOyProjection();
+    }
+
+    DynamicCoord intersect;
+    if ( start < end ) { // Движение вправо
+        intersect = std::min(end,roadProjection.second);
+    } else {    // Движение влево
+        intersect = std::max(end,roadProjection.first);
+    }
+
+    DynamicCoord len = std::fabs(intersect - start);
+
+    // Начальная точка уже точно на дороге, значит пересечение проверять не нужно
+
+    if (isHorizontal) {  // Перемещение по X
+        return {.pos = {intersect, start_pos.y}, .path = len};
+    } else {
+        return {.pos = {start_pos.x, intersect}, .path = len};
+    }
+}
+
 
 Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
     if( dog.GetSpeed() == Speed{0.0, 0.0} ) {
         return dog.GetPosition();
     }
-    
+
     // Направление движения собаки
     Direction dog_direction = dog.GetDirection();
-    // Переводим координаты на прямую в направлении движения собаки
-    auto NormalizeCoord = [](Direction dog_direction, Position pos) {
-        switch (dog_direction) {
-            case Direction::NORTH: return -pos.y;
-            case Direction::SOUTH: return  pos.y;
-            case Direction::WEST:  return -pos.x;
-            case Direction::EAST:  return  pos.x;
-        }
-        // По идее, недостижимое условие
-        return DynamicCoord{0.0};
-    };
 
     auto dog_start_pos = dog.GetPosition();
     // Сначала находим конечную позицию в предположении, что туда можно попасть
     auto dog_end_pos = dog.GetPosition()+dog.GetSpeed()*dt;
 
-    //StartEndCoord dog_movement = {dog_start_pos, dog_end_pos};
-    Direction dir = dog.GetDirection();
-    bool isHorizontalMove = dir == Direction::WEST || dir == Direction::EAST;
-
-    // Проектируем дороги на вектор движения
-    std::set<DynamicDimension> maximums;
+    // Дороги, на которых начало
+    std::set<Road> withStartRoads;
     for ( auto road : map_->GetRoads() ) {
-        auto ox_projection = road.GetOxProjection();
-        auto oy_projection = road.GetOyProjection();
-        StartEndCoord projection;
-        // Проверяем, что вектор движения пересекает дорогу
-        if ( isHorizontalMove ) {
-            if ( road.IsHorizontal() && !utils::geometry::IsInInterval(dog_start_pos.y, oy_projection) ) {
-                continue;   // Дорога вне вектора движения
-            }
-            if (dir == Direction::WEST) {
-                projection = {-ox_projection.first, -ox_projection.second};
-            } else {
-                projection = {ox_projection.first, ox_projection.second};
-            }
-            // Запоминаем проекцию на вектор движения
-            projection = {std::minmax(projection.first, projection.second)};
-        } else {
-            if ( road.IsVertical() && !utils::geometry::IsInInterval(dog_start_pos.x, ox_projection) ) {
-                continue;   // Дорога вне вектора движения
-            }
-            if (dir == Direction::NORTH) {
-                projection = {-oy_projection.first, -oy_projection.second};
-            } else {
-                projection = {oy_projection.first, oy_projection.second};
-            }
-            projection = {std::minmax(projection.first, projection.second)};
-        }
-        // Дорога пересекает вектор движения. Ищем максимум пересечения в направлении движения
-        auto res = utils::geometry::GetMaxMoveOnSegment(NormalizeCoord(dog_direction, dog_start_pos), 
-            NormalizeCoord(dog_direction, dog_end_pos), projection.first, projection.second);
-
-        if ( res ) {
-            maximums.insert(*res);
+        if (isPointOnRoad(dog_start_pos, road)) {
+            withStartRoads.insert(road);
         }
     }
 
-    DynamicDimension result = (dir == Direction::WEST || dir == Direction::NORTH) ? -*maximums.rbegin() : *maximums.rbegin();
-
-    // Перед возвратом проверим, что мы не врезались в границу дороги.
-    // Если врезались, нужно занулить скорость
-
-    Position res;
-    if (isHorizontalMove) {
-        res = {result, dog_start_pos.y};
-    } else {
-        res = {dog_start_pos.x, result};
+    // Дороги, на которых конец
+    std::set<Road> withEndRoads;
+    for ( auto road : map_->GetRoads() ) {
+        if (isPointOnRoad(dog_start_pos, road)) {
+            withEndRoads.insert(road);
+        }
     }
 
-    if( dog_end_pos != res ) {
+    // Находим дороги, на которых есть обе точки
+    std::set<Road> intersect;
+    for ( auto road : withStartRoads ) {
+        if ( withEndRoads.find(road) != withEndRoads.end() ) {
+            intersect.insert(road);
+        }
+    }
+    
+    if (!intersect.empty()) {   // Если есть общие, то вычисляем перемещение на них
+        withStartRoads = intersect;
+    }
+
+    // Нужно найти максимальное перемещение, которое может сделать собака
+    Move res(dog_start_pos, 0.0);
+    for ( auto road : withStartRoads ) {
+        auto move = GetMoveOnRoad(dog_start_pos, dog_end_pos, road);
+        if (move.path > res.path) {
+            res = move;
+        }
+    }
+
+    if( dog_end_pos != res.pos ) {
         dog.SetSpeed(0.0, std::nullopt);
     }
 
-    return res;
+    return res.pos;
 }
-
 
 void Game::AddMap(const Map& map) {
     const size_t index = maps_.size();

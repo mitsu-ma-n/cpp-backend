@@ -104,6 +104,10 @@ Map tag_invoke(json::value_to_tag<Map>, json::value const& jv )
         map.SetDogSpeed(value_to<double>(it->value()));
     }
 
+    if( auto it = obj.find(json_field::MAP_BAG_CAPACITY); it != obj.end() ) {
+        map.SetBagCapacity(value_to<int>(it->value()));
+    }
+
     AddRoads(map,obj);
     AddBuildings(map,obj);
     AddOffices(map,obj);
@@ -187,6 +191,23 @@ void tag_invoke(json::value_from_tag, json::value& jv, Item const& item)
     jv = {
         {json_field::ITEM_TYPE, json::value_from(item.GetType())},
         {json_field::ITEM_POSITION, json::value_from(item.GetPosition())}
+    };
+}
+
+void tag_invoke(json::value_from_tag, json::value& jv, Item* const& item)
+{
+    jv = {
+        {json_field::ITEM_ID, json::value_from(*item->GetId())},
+        {json_field::ITEM_TYPE, json::value_from(item->GetType())}
+    };
+}
+
+
+void tag_invoke(json::value_from_tag, json::value& jv, ItemInBag<Item> const& item)
+{
+    jv = {
+        {json_field::ITEM_ID, json::value_from(*item.ref.GetId())},
+        {json_field::ITEM_TYPE, json::value_from(item.ref.GetType())}
     };
 }
 
@@ -347,7 +368,15 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetSta
 
     json::object object_players_info;   // Объект информации об игроках
     for (const auto& player_info : state_result.players_) {
-        object_players_info[player_info.GetIdAsString()] = json::value_from(player_info.GetDog());
+        json::object object_player_info;
+        const auto& dog = player_info.GetDog();
+        object_player_info[json_field::DOG_POSITION] = json::value_from(dog.GetPosition());
+        object_player_info[json_field::DOG_SPEED] = json::value_from(dog.GetSpeed());
+        object_player_info[json_field::DOG_DIRECTION] = json::value_from(dog.GetDirectionAsString());
+
+        object_player_info[json_field::PLAYER_BAG] = json::value_from(player_info.GetItems());
+
+        object_players_info[player_info.GetIdAsString()] = json::value_from(object_player_info);
     }
 
     object_state[json_field::GET_STATE_PLAYERS] = object_players_info;
@@ -404,12 +433,17 @@ std::pair<Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path&
 
     // загрузка скорости пса
     auto default_dog_speed = value_to<double>(obj.at(std::string(json_field::GAME_DEFAULT_DOG_SPEED)));
+    // вместимость рюкзака
+    int default_bag_capacity = 3;
+    if( auto it = obj.find(json_field::GAME_DEFAULT_BAG_CAPACITY); it != obj.end() ) {
+        auto default_bag_capacity = value_to<int>(obj.at(std::string(json_field::GAME_DEFAULT_BAG_CAPACITY)));
+    }
 
     // загрузка lootGeneratorConfig
     auto loot_gen_info = boost::json::value_to<loot_gen::LootGeneratorInfo>(obj.at(std::string(json_field::GAME_LOOT_GENERATOR_CONFIG)));
 
     // Создаём пустую игру
-    Game game(loot_gen_info, default_dog_speed);
+    Game game(loot_gen_info, default_dog_speed, default_bag_capacity);
     extra_data::MapsLootTypes lootTypes;
 
     // Добавляем карты в игру

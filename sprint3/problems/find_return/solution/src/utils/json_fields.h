@@ -3,19 +3,21 @@
 namespace json_field {
     // Game
     constexpr static char GAME_DEFAULT_DOG_SPEED[]     = "defaultDogSpeed";
+    constexpr static char GAME_DEFAULT_BAG_CAPACITY[]  = "defaultBagCapacity";
     constexpr static char GAME_MAPS[]                  = "maps";
     constexpr static char GAME_LOOT_GENERATOR_CONFIG[] = "lootGeneratorConfig";
     // LootGeneratorInfo
     constexpr static char LOOT_GENERATOR_CONFIG_PERIOD[]      = "period";
     constexpr static char LOOT_GENERATOR_CONFIG_PROBABILITY[] = "probability";
     // Map
-    constexpr static char MAP_DOG_SPEED[]   = "dogSpeed";
-    constexpr static char MAP_ID[]          = "id";
-    constexpr static char MAP_NAME[]        = "name";
-    constexpr static char MAP_ROADS[]       = "roads";
-    constexpr static char MAP_BUILDINGS[]   = "buildings";
-    constexpr static char MAP_OFFICES[]     = "offices";
-    constexpr static char MAP_LOOT_TYPES[]  = "lootTypes";
+    constexpr static char MAP_DOG_SPEED[]    = "dogSpeed";
+    constexpr static char MAP_BAG_CAPACITY[] = "bagCapacity";
+    constexpr static char MAP_ID[]           = "id";
+    constexpr static char MAP_NAME[]         = "name";
+    constexpr static char MAP_ROADS[]        = "roads";
+    constexpr static char MAP_BUILDINGS[]    = "buildings";
+    constexpr static char MAP_OFFICES[]      = "offices";
+    constexpr static char MAP_LOOT_TYPES[]   = "lootTypes";
     // LootTypes
     // constexpr static char LOOT_TYPES_NAME[]     = "name";
     // constexpr static char LOOT_TYPES_FILE[]     = "file";
@@ -27,7 +29,10 @@ namespace json_field {
     constexpr static char DOG_POSITION[]  = "pos";
     constexpr static char DOG_SPEED[]     = "speed";
     constexpr static char DOG_DIRECTION[] = "dir";
+    // Player
+    constexpr static char PLAYER_BAG[]    = "bag";
     // Item
+    constexpr static char ITEM_ID[]        = "id";
     constexpr static char ITEM_TYPE[]      = "type";
     constexpr static char ITEM_POSITION[]  = "pos";
     // Road
