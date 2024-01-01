@@ -9,6 +9,7 @@
 #include <boost/asio/ip/tcp.hpp>
 
 #include <boost/timer/timer.hpp>
+#include <memory>
 
 #include "server_params.h"
 #include "logger.h"
@@ -18,7 +19,7 @@ namespace http_handler {
 template<class SomeRequestHandler>
 class LoggingRequestHandler {
 public:
-    LoggingRequestHandler(SomeRequestHandler& hend) : decorated_(hend) {}
+    LoggingRequestHandler(SomeRequestHandler hend) : decorated_(hend) {}
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send, boost::asio::ip::tcp::endpoint&& endpoint) {
@@ -29,36 +30,37 @@ public:
         request_jobject[json_field::REQUEST_METHOD] = req.method_string();
 
         BOOST_LOG_TRIVIAL(info)  << boost::log::add_value(additional_data, boost::json::value(request_jobject)) 
-                                << server_params::REQUEST_RECEIV_MESSAGE;
+                                 << server_params::REQUEST_RECEIV_MESSAGE;
 
         // Заводим объект под информацию об ответе
-        boost::json::object response_jobject;
+        auto response_jobject = std::make_shared<boost::json::object>();
 
         // Заводим таймер, чтобы засечь время формирования ответа
-        boost::timer::cpu_timer timer;
+        auto timer = std::make_shared<boost::timer::cpu_timer>();
 
-        auto loggingResponse = [&](auto&& response) {
-            timer.stop();
-            boost::timer::cpu_times times = timer.elapsed();
+        auto loggingResponse = [send, response_jobject, timer](auto&& response) {
+            timer->stop();
+            boost::timer::cpu_times times = timer->elapsed();
 
             // Заполняем информацию об ответе. Обработка запроса к этому времени уже произведена
-            response_jobject[json_field::RESPONSE_TIME] = times.wall / 1'000'000;   // наносекунды в миллисекунды
-            response_jobject[json_field::RESPONSE_CODE] = response.result_int();
-            response_jobject[json_field::RESPONSE_CONTENT_TYPE] = response[http::field::content_type];
+            (*response_jobject)[json_field::RESPONSE_TIME] = times.wall / 1'000'000;   // наносекунды в миллисекунды
+            (*response_jobject)[json_field::RESPONSE_CODE] = response.result_int();
+            (*response_jobject)[json_field::RESPONSE_CONTENT_TYPE] = response[http::field::content_type];
 
             // непосредственная отправка ответа
             send(response);
+
+            BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value(*response_jobject))
+                                    << server_params::RESPONSE_SENT_MESSAGE;
+
         };
 
         // Непосредственно обработка запроса с использованием лямбды
         decorated_(std::forward<decltype(req)>(req), std::move(loggingResponse));
-
-        BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value(response_jobject))
-                                << server_params::RESPONSE_SENT_MESSAGE;
     }
 
 private:
-     SomeRequestHandler& decorated_;
+     SomeRequestHandler decorated_;
 };
 
 }  // namespace http_handler
