@@ -79,14 +79,16 @@ int main(int argc, const char* argv[]) {
         // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path);
 
-        http_handler::LoggingRequestHandler logging_handler{*handler};
+        // endpoint нужен и известен только внутри логгера, поэтому тут он не нужен
+        http_handler::LoggingRequestHandler logging_handler{ [handler](auto&& req, auto&& send) {
+            (*handler)(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send));
+        } };
 
         const auto address = net::ip::make_address(server_params::ADRESS);
         // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
-        http_server::ServeHttp(ioc, {address, server_params::PORT}, [&logging_handler](auto&& req, auto&& send, auto&& endpoint) {
-            logging_handler(std::forward<decltype(req)>(req), std::forward<decltype(send)>(send), std::forward<decltype(endpoint)>(endpoint));
-        });
+        http_server::ServeHttp(ioc, {address, server_params::PORT}, logging_handler);
 
+        // Настраиваем логгер
         boost::log::add_common_attributes(); 
         logging::add_console_log( 
             std::cout,
