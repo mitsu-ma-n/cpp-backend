@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "model.h"
+#include "game.h"
 #include "http_handler_types.h"
 #include "join_use_case.h"
 #include "players_use_case.h"

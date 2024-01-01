@@ -1,8 +1,7 @@
 #pragma once
 
-#include "model.h"
+#include "dog.h"
 #include "players.h"
-#include <string>
 
 namespace app {
 

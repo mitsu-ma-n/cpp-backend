@@ -52,58 +52,11 @@ auto EqualsRange(const Range& range, Predicate prediate) {
     return EqualsRangeMatcher<Range, Predicate>{range, prediate};
 }
 
-class VectorItemGathererProvider : public collision_detector::ItemGathererProvider {
-public:
-    VectorItemGathererProvider(std::vector<collision_detector::Item> items,
-                               std::vector<collision_detector::Gatherer> gatherers)
-        : items_(items)
-        , gatherers_(gatherers) {
-    }
-
-    
-    size_t ItemsCount() const override {
-        return items_.size();
-    }
-    collision_detector::Item GetItem(size_t idx) const override {
-        return items_[idx];
-    }
-    size_t GatherersCount() const override {
-        return gatherers_.size();
-    }
-    collision_detector::Gatherer GetGatherer(size_t idx) const override {
-        return gatherers_[idx];
-    }
-
-private:
-    std::vector<collision_detector::Item> items_;
-    std::vector<collision_detector::Gatherer> gatherers_;
-};
-
-class CompareEvents {
-public:
-    bool operator()(const collision_detector::GatheringEvent& l,
-                    const collision_detector::GatheringEvent& r) {
-        if (l.gatherer_id != r.gatherer_id || l.item_id != r.item_id) 
-            return false;
-
-        static const double eps = 1e-10;
-
-        if (std::abs(l.sq_distance - r.sq_distance) > eps) {
-            return false;
-        }
-
-        if (std::abs(l.time - r.time) > eps) {
-            return false;
-        }
-        return true;
-    }
-};
-
 }
 
 SCENARIO("Collision detection") {
     WHEN("no items") {
-        VectorItemGathererProvider provider{
+        collision_detector::VectorItemGathererProvider provider{
             {}, {{{1, 2}, {4, 2}, 5.}, {{0, 0}, {10, 10}, 5.}, {{-5, 0}, {10, 5}, 5.}}};
         THEN("No events") {
             auto events = collision_detector::FindGatherEvents(provider);
@@ -111,7 +64,7 @@ SCENARIO("Collision detection") {
         }
     }
     WHEN("no gatherers") {
-        VectorItemGathererProvider provider{
+        collision_detector::VectorItemGathererProvider provider{
             {{{1, 2}, 5.}, {{0, 0}, 5.}, {{-5, 0}, 5.}}, {}};
         THEN("No events") {
             auto events = collision_detector::FindGatherEvents(provider);
@@ -119,7 +72,7 @@ SCENARIO("Collision detection") {
         }
     }
     WHEN("multiple items on a way of gatherer") {
-        VectorItemGathererProvider provider{{
+        collision_detector::VectorItemGathererProvider provider{{
             {{9, 0.27}, .1},
             {{8, 0.24}, .1},
             {{7, 0.21}, .1},
@@ -146,11 +99,11 @@ SCENARIO("Collision detection") {
                     collision_detector::GatheringEvent{5, 0,0.12*0.12, 0.4},
                     collision_detector::GatheringEvent{4, 0,0.15*0.15, 0.5},
                     collision_detector::GatheringEvent{3, 0,0.18*0.18, 0.6},
-                }, CompareEvents()));
+                }, collision_detector::CompareEvents()));
         }
     }
     WHEN("multiple gatherers and one item") {
-        VectorItemGathererProvider provider{{
+        collision_detector::VectorItemGathererProvider provider{{
                                                 {{0, 0}, 0.},
                                             },
                                             {
@@ -166,7 +119,7 @@ SCENARIO("Collision detection") {
         }
     }
     WHEN("Gatherers stay put") {
-        VectorItemGathererProvider provider{{
+        collision_detector::VectorItemGathererProvider provider{{
                                                 {{0, 0}, 10.},
                                             },
                                             {

@@ -1,6 +1,6 @@
 #include "state_use_case.h"
+
 #include <stdexcept>
-#include <vector>
 
 namespace app {
 

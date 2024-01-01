@@ -1,9 +1,8 @@
 #include "players_use_case.h"
+
 #include <stdexcept>
 
 namespace app {
-
-///  ---  ListPlayersUseCase  ---  ///
 
 // Для игрока с указанным токеном выдаёт список игроков, которые находятся вместе с ним в одной сессии
 ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
@@ -26,7 +25,5 @@ ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
 
     return res;
 }
-
-///  ---  ListPlayersUseCase  ---  ///
 
 }  // namespace app

@@ -16,7 +16,6 @@
 
 #include "boost/json/value_from.hpp"
 #include "http_handler_types.h"
-#include "model.h"
 #include "json_fields.h"
 #include "json_loader.h"
 #include "http_handler_defs.h"

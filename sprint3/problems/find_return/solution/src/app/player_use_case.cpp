@@ -1,9 +1,27 @@
 #include "player_use_case.h"
-#include "model.h"
-#include <cstddef>
+
+#include <string>
+#include <set>
 #include <stdexcept>
 
 namespace app {
+
+bool PlayerAction::IsDirection() const {
+    // Список допустимых направлений
+    std::set<std::string> valid_directions = {
+        {(char)model::Direction::NORTH}, 
+        {(char)model::Direction::SOUTH}, 
+        {(char)model::Direction::EAST}, 
+        {(char)model::Direction::WEST}
+    };
+    return valid_directions.find(move_) != valid_directions.end();
+}
+
+bool PlayerAction::IsStop() const {
+    using namespace std::string_literals;
+    return move_ == ""s;
+}
+
 
 PlayerActionUseCase::PlayerActionUseCase(PlayerTokens& player_tokens) 
     : player_tokens_{&player_tokens} {
@@ -30,6 +48,5 @@ PlayerActionResult PlayerActionUseCase::ExecutePlayerAction(Token token, PlayerA
    
     return PlayerActionResult{};
 }
-
 
 }  // namespace app

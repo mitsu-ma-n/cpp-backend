@@ -1,6 +1,6 @@
 #pragma once
 
-#include "model.h"
+#include "game.h"
 #include "players.h"
 #include "join_use_case.h"
 #include "players_use_case.h"
@@ -8,7 +8,6 @@
 #include "maps_use_case.h"
 #include "player_use_case.h"
 #include "tick_use_case.h"
-#include <string>
 
 namespace app {
 

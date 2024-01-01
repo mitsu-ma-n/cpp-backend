@@ -9,7 +9,6 @@
 #include <string_view>
 
 #include "boost/json/value_from.hpp"
-#include "model.h"
 #include "json_fields.h"
 
 namespace json = boost::json;

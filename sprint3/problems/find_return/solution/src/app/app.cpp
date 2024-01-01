@@ -1,7 +1,4 @@
 #include "app.h"
-#include "player_use_case.h"
-#include "tick_use_case.h"
-#include <stdexcept>
 
 namespace app {
 

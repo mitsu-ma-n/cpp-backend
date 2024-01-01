@@ -1,11 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 //#include <catch2/matchers/catch_matchers_templated.hpp>
 
-#include "../src/model/model.h"
-
-//using namespace std::literals;
-
-#include "../src/model/model.h"
+#include "../src/model/dog.h"
 
 using namespace model;
 

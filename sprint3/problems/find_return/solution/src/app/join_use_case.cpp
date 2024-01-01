@@ -1,5 +1,5 @@
 #include "join_use_case.h"
-#include <cstddef>
+
 #include <stdexcept>
 
 namespace app {

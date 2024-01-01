@@ -12,10 +12,26 @@ find_package(Threads REQUIRED)
 
 # Добавляем библиотеку моедли, указывая, что она статическая.
 add_library(model STATIC 
-	src/model/model.h
-	src/model/model.cpp
+	src/model/buildings.cpp
+	src/model/buildings.h
+	src/model/dog.cpp
+	src/model/dog.h
+	src/model/game_session.cpp
+	src/model/game_session.h
+	src/model/game.cpp
+	src/model/game.h
+	src/model/item.cpp
+	src/model/item.h
+	src/model/map.cpp
+	src/model/map.h
+	src/model/model_geom.cpp
+	src/model/model_geom.h
+	src/model/road.cpp
+	src/model/road.h
 	src/model/utils.cpp
 	src/model/utils.h
+	src/utils/collision_detector.cpp
+	src/utils/collision_detector.h
 	src/utils/loot_generator.cpp
 	src/utils/loot_generator.h
 	src/utils/tagged.h
@@ -70,8 +86,6 @@ target_link_libraries(http PUBLIC CONAN_PKG::boost)
 
 add_library(utils STATIC 
 	src/utils/boost_json.cpp
-	src/utils/collision_detector.h
-	src/utils/collision_detector.cpp
 	src/utils/geom.h
 	src/utils/json_fields.h
 	src/utils/json_loader.cpp

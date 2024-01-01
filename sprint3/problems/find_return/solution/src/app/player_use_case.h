@@ -1,9 +1,7 @@
 #pragma once
 
-#include "model.h"
 #include "players.h"
-#include <string>
-#include <set>
+
 #include <optional>
 
 namespace app {
@@ -27,22 +25,8 @@ public:
         return std::nullopt;
     }
 
-
-    bool IsDirection() const {
-        // Список допустимых направлений
-        std::set<std::string> valid_directions = {
-            {(char)model::Direction::NORTH}, 
-            {(char)model::Direction::SOUTH}, 
-            {(char)model::Direction::EAST}, 
-            {(char)model::Direction::WEST}
-        };
-        return valid_directions.find(move_) != valid_directions.end();
-    }
-
-    bool IsStop() const {
-        using namespace std::string_literals;
-        return move_ == ""s;
-    }
+    bool IsDirection() const;
+    bool IsStop() const;
 
 private:
     std::string move_;

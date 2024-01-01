@@ -5,7 +5,6 @@
 
 #include "extra_data.h"
 #include "http_server.h"
-#include "model.h"
 #include "http_handler_types.h"
 #include "app.h"
 

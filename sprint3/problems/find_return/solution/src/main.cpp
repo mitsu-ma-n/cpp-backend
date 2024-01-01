@@ -14,7 +14,7 @@
 #include "server_params.h"
 #include "json_loader.h"
 #include "request_handler.h"
-#include "model.h"
+#include "game.h"
 #include "logger.h"
 #include "request_handler_logging.h"
 #include "json_fields.h"

@@ -14,7 +14,6 @@
 
 #include "json_fields.h"
 #include "loot_generator.h"
-#include "model.h"
 #include "tick_use_case.h"
 
 namespace json = boost::json;

@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "http_handler_types.h"
-#include "model.h"
 #include "http_handler_defs.h"
 
 #include <boost/asio/strand.hpp>
