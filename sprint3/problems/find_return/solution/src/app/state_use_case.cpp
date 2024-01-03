@@ -17,8 +17,7 @@ GetStateResult GetStateUseCase::GetState(Token token) {
         for ( auto dog : dogs ) {
             auto dog_name = dog->GetName();
             auto player = players_->FinByDog(*dog);
-            std::vector<model::Item*> items = session->GetItems();
-            StatePlayerInfo info{player->GetId(), *dog, items};
+            StatePlayerInfo info{player->GetId(), *dog};
             res.players_.push_back(info);
         }
 

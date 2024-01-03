@@ -56,7 +56,7 @@ public:
         return width_;
     }
 
-    Bag GetBag() {
+    const Bag& GetBag() const {
         return bag_;
     }
 
@@ -82,6 +82,13 @@ public:
 
     void AddScore(int score) noexcept {
         score_ += score;
+    }
+
+    void SaveBag() {
+        for (auto item : bag_) {
+            score_ += item.GetValue();
+        }
+        ClearBag();
     }
 
 private:

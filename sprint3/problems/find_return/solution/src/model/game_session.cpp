@@ -2,8 +2,10 @@
 
 #include "collision_detector.h"
 
+#include <optional>
 #include <set>
 #include <unordered_set>
+#include <variant>
 
 namespace model {
 using namespace std::string_literals;
@@ -50,8 +52,12 @@ Item* GameSession::AddItem(Position pos, Item::Type& type) {
 void GameSession::Tick(TimeType dt) noexcept {
     // Список предметов для обработки коллизий
     std::vector<collision_detector::Item> col_items;
-    for (auto item : items_) {
-        col_items.push_back({ {item->GetPosition().x, item->GetPosition().y}, item->GetWidth() });
+    for (const auto& [item_id, item_insex] : item_id_to_index_) {
+        col_items.push_back(
+            { *item_id, 
+            {items_[item_insex]->GetPosition().x, items_[item_insex]->GetPosition().y},
+            items_[item_insex]->GetWidth() }
+            );
     }
 
     // Список офисов для обработки коллизий
@@ -84,58 +90,44 @@ void GameSession::Tick(TimeType dt) noexcept {
     collision_detector::VectorOfficeSaveProvider office_provider(col_offices, col_gatherers);
     auto office_collisions = collision_detector::FindOfficeSaveEvents(office_provider);
 
-    std::set<size_t> collected_items_ids;
-    // Обрабатываем все коллизи вместе хронологическом порядке вместе
-    auto items_it = item_collisions.begin();
-    auto offices_it = office_collisions.begin();
-    while ( items_it != item_collisions.end() && 
-            offices_it != office_collisions.end()) {
-        if (items_it->time < offices_it->time) {
-            // Выполняем работу с предметом
-            auto item = items_.at(items_it->item_id);
-            auto dog = dogs_.at(items_it->gatherer_id);
-            // Если предмет ещё не собран и  помещается в рюкзак
-            if (dog->GetBagSize() < map_->GetBagCapacity() && !collected_items_ids.contains(items_it->item_id)) {
-                // Убираем предмет в рюкзак
-                dog->TakeItem(*item);
-                // Очищаем память. Теперь предмет только в рюкзаке
-                delete item;
-                items_[items_it->item_id] = nullptr;
-                // Запоминаем, что мы собрали предмет
-                collected_items_ids.insert(items_it->item_id);
+    std::set<collision_detector::AllIvents> all_events;
+    for (auto item_event : item_collisions) {
+        all_events.insert(item_event);
+    }
+    for (auto office_event : office_collisions) {
+        all_events.insert(office_event);
+    }
+
+    std::set<Item::Id> collected_items;
+
+    // События уже отсортированы по времени, потому что оператор сравнения переопределён
+    for (auto event : all_events) {
+        std::visit([this, &col_items, &collected_items](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, collision_detector::OfficeSaveEvent>) {
+                // Если встретили событие офиса
+                auto dog = dogs_.at(arg.gatherer_id);
+                // Сдаём предметы (начисляем очки + очищаем рюкзак)
+                dog->SaveBag();
+            } else if constexpr (std::is_same_v<T, collision_detector::GatheringEvent>) {
+                // Если встретили событие сбора
+                auto collected_item_id = Item::Id(col_items[arg.item_id].id);
+                auto item_index = item_id_to_index_[collected_item_id];
+                auto item = items_[item_index];
+                auto dog = dogs_.at(arg.gatherer_id);
+                // Пробуем поднять предмет (лезет в рюкзак и не собрали ранее)
+                if (dog->GetBagSize() < map_->GetBagCapacity() && !collected_items.contains(collected_item_id)) {
+                    // Запоминаем, что предмет собран
+                    collected_items.insert(collected_item_id);
+                    // Убираем предмет в рюкзак (создаётся копия)
+                    dog->TakeItem(*item);
+                }
             }
-        } else {
-            // Выполняем работу с офисом
-            auto dog = dogs_.at(offices_it->gatherer_id);
-            //dog->SaveOffice(*offices_it);
-        }
+        }, event);
     }
 
-
-    // Раздаём предметы собакам
-    for (auto collision : item_collisions) {
-        auto item = items_.at(collision.item_id);
-        auto dog = dogs_.at(collision.gatherer_id);
-        // Если предмет ещё не собран и  помещается в рюкзак
-        if (dog->GetBagSize() < map_->GetBagCapacity() && !collected_items_ids.contains(collision.item_id)) {
-            // Убираем предмет в рюкзак
-            dog->TakeItem(*item);
-            // Очищаем память. Теперь предмет только в рюкзаке
-            delete item;
-            items_[collision.item_id] = nullptr;
-            // Запоминаем, что мы собрали предмет
-            collected_items_ids.insert(collision.item_id);
-        }
-    }
-
-    // Удаляем собранные предметы
-    for (int i = 0; i < items_.size(); ++i) {
-        if (items_[i] == nullptr) {
-            items_[i] = items_.back();
-            items_.pop_back();
-            // TODO: Работа со списком Id предметов
-        }
-    }
+    // Очищаем список предметов от нулевых указателей
+    ClearCollectedItems(collected_items);
 
     // Генерируем новые предметы при необходимости
     size_t n_items = item_id_to_index_.size();
@@ -205,6 +197,40 @@ Move GetMoveOnRoad(Position start_pos, Position end_pos, Road road) {
     }
 }
 
+std::optional<Item::Id> GameSession::GetItemIdByIndex(size_t index) {
+    for ( auto [item_id, item_index] : item_id_to_index_ ) {
+        if (item_index == index) {
+            return item_id;
+        }
+    }
+    return std::nullopt;
+}
+
+void GameSession::ClearCollectedItems(const std::set<Item::Id>& collected_items) {
+    for ( auto item_id : collected_items ) {
+        if (auto it = item_id_to_index_.find(item_id); it != item_id_to_index_.end()) {
+            auto item_index = it->second;
+            // Освобождаем память, потому что копия предмета теперь в рюкзаке
+            delete items_[item_index];
+            // Удаляем id предмета из таблицы
+            item_id_to_index_.erase(item_id);
+            if (!item_id_to_index_.empty()) {   // Остались ещё предметы
+                // находим id последнего предмета в списке предметов
+                auto last_item_id = GetItemIdByIndex(items_.size() - 1);
+                if (!last_item_id) {
+                    throw std::runtime_error("GameSession::ClearCollectedItems: not found item id for last index in items list");
+                }
+                // На это место удалённого предмета кладём указатель на предмет из конца списка
+                items_[item_index] = items_.back();
+                // Заносим новый индекс перемещённого предмета в таблицу
+                item_id_to_index_[*last_item_id] = item_index;
+            }
+            // Удаляем указатель из конца списка
+            items_.pop_back();
+        }
+    }
+}
+
 
 Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
     if( dog.GetSpeed() == Speed{0.0, 0.0} ) {
@@ -219,23 +245,21 @@ Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
     auto dog_end_pos = dog.GetPosition()+dog.GetSpeed()*dt;
 
     // Дороги, на которых начало
-    std::unordered_set<Road*> withStartRoads;
-    for ( auto road : map_->GetRoads() ) {
-        if (isPointOnRoad(dog_start_pos, road)) {
-            withStartRoads.insert(&road);
-        }
-    }
-
+    std::unordered_set<const Road*> withStartRoads;
     // Дороги, на которых конец
-    std::unordered_set<Road*> withEndRoads;
-    for ( auto road : map_->GetRoads() ) {
-        if (isPointOnRoad(dog_start_pos, road)) {
-            withEndRoads.insert(&road);
+    std::unordered_set<const Road*> withEndRoads;
+    const auto& roads = map_->GetRoads();
+    for ( size_t i = 0; i != roads.size(); ++i ) {
+        if (isPointOnRoad(dog_start_pos, roads[i])) {
+            withStartRoads.insert(&roads[i]);
+        }
+        if (isPointOnRoad(dog_end_pos, roads[i])) {
+            withEndRoads.insert(&roads[i]);
         }
     }
 
     // Находим дороги, на которых есть обе точки
-    std::unordered_set<Road*> intersect;
+    std::unordered_set<const Road*> intersect;
     for ( auto road : withStartRoads ) {
         if ( withEndRoads.find(road) != withEndRoads.end() ) {
             intersect.insert(road);

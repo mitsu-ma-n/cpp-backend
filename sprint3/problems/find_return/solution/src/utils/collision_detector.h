@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <optional>
+#include <variant>
 
 namespace collision_detector {
 
@@ -24,6 +25,7 @@ struct CollectionResult {
 CollectionResult TryCollectPoint(geom::Point2D a, geom::Point2D b, geom::Point2D c);
 
 struct Item {
+    unsigned int id;
     geom::Point2D position;
     double width;
 };
@@ -45,18 +47,7 @@ public:
     virtual Gatherer GetGatherer(size_t idx) const = 0;
 };
 
-struct GatheringEventBase {
-    double time;
-};
-
-struct SaveOnBaseEvent : public GatheringEventBase {
-    size_t gatherer_id;
-    double sq_distance;
-};
-
-
 struct GatheringEvent {
-//struct GatheringEvent : public GatheringEventBase {
     size_t item_id;
     size_t gatherer_id;
     double sq_distance;
@@ -65,10 +56,10 @@ struct GatheringEvent {
 
 std::vector<GatheringEvent> FindGatherEvents(const ItemGathererProvider& provider);
 
-class VectorItemGathererProvider : public collision_detector::ItemGathererProvider {
+class VectorItemGathererProvider : public ItemGathererProvider {
 public:
-    VectorItemGathererProvider(std::vector<collision_detector::Item> items,
-                               std::vector<collision_detector::Gatherer> gatherers)
+    VectorItemGathererProvider(std::vector<Item> items,
+                               std::vector<Gatherer> gatherers)
         : items_(items)
         , gatherers_(gatherers) {
     }
@@ -77,25 +68,25 @@ public:
     size_t ItemsCount() const override {
         return items_.size();
     }
-    collision_detector::Item GetItem(size_t idx) const override {
+    Item GetItem(size_t idx) const override {
         return items_[idx];
     }
     size_t GatherersCount() const override {
         return gatherers_.size();
     }
-    collision_detector::Gatherer GetGatherer(size_t idx) const override {
+    Gatherer GetGatherer(size_t idx) const override {
         return gatherers_[idx];
     }
 
 private:
-    std::vector<collision_detector::Item> items_;
-    std::vector<collision_detector::Gatherer> gatherers_;
+    std::vector<Item> items_;
+    std::vector<Gatherer> gatherers_;
 };
 
 class CompareEvents {
 public:
-    bool operator()(const collision_detector::GatheringEvent& l,
-                    const collision_detector::GatheringEvent& r) {
+    bool operator()(const GatheringEvent& l,
+                    const GatheringEvent& r) {
         if (l.gatherer_id != r.gatherer_id || l.item_id != r.item_id) 
             return false;
 
@@ -166,10 +157,10 @@ struct OfficeSaveEvent {
 
 std::vector<OfficeSaveEvent> FindOfficeSaveEvents(const OfficeSaveProvider& provider) ;
 
-class VectorOfficeSaveProvider : public collision_detector::OfficeSaveProvider {
+class VectorOfficeSaveProvider : public OfficeSaveProvider {
 public:
-    VectorOfficeSaveProvider(std::vector<collision_detector::Rect> rects,
-                               std::vector<collision_detector::Gatherer> gatherers)
+    VectorOfficeSaveProvider(std::vector<Rect> rects,
+                               std::vector<Gatherer> gatherers)
         : rects_(rects)
         , gatherers_(gatherers) {
     }
@@ -178,19 +169,23 @@ public:
     size_t RectsCount() const override {
         return rects_.size();
     }
-    collision_detector::Rect GetRect(size_t idx) const override {
+    Rect GetRect(size_t idx) const override {
         return rects_[idx];
     }
     size_t GatherersCount() const override {
         return gatherers_.size();
     }
-    collision_detector::Gatherer GetGatherer(size_t idx) const override {
+    Gatherer GetGatherer(size_t idx) const override {
         return gatherers_[idx];
     }
 
 private:
-    std::vector<collision_detector::Rect> rects_;
-    std::vector<collision_detector::Gatherer> gatherers_;
+    std::vector<Rect> rects_;
+    std::vector<Gatherer> gatherers_;
 };
+
+using AllIvents = std::variant<OfficeSaveEvent, GatheringEvent>;
+
+bool operator<(const AllIvents& a, const AllIvents& b);
 
 }  // namespace collision_detector

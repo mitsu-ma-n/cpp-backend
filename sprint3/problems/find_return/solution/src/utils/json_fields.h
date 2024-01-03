@@ -31,6 +31,7 @@ namespace json_field {
     constexpr static char DOG_DIRECTION[] = "dir";
     // Player
     constexpr static char PLAYER_BAG[]    = "bag";
+    constexpr static char PLAYER_SCORE[]  = "score";
     // Item
     constexpr static char ITEM_ID[]        = "id";
     constexpr static char ITEM_TYPE[]      = "type";

@@ -4,6 +4,8 @@
 #include "dog.h"
 #include "loot_generator.h"
 
+#include <set>
+
 namespace model {
 
 class GameSession {
@@ -46,6 +48,8 @@ public:
     const Dog* FindDog(const Dog::Id& id) const noexcept;
 
 private:
+    std::optional<Item::Id> GetItemIdByIndex(size_t index);
+    void ClearCollectedItems(const std::set<Item::Id>& collected_items);
     Position MoveDog(Dog& dog, TimeType dt) noexcept;
 
 private:

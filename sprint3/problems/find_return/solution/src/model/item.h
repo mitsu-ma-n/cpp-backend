@@ -11,11 +11,13 @@ class Item {
 public:
     using Id = util::Tagged<std::uint32_t, Item>;
     using Type = int;
+    using Value = int;
 
-    Item(Id id, Type type, Position position) noexcept
+    Item(Id id, Type type, Position position, Value val = 10) noexcept
     : id_{std::move(id)} 
     , type_{type}
-    , position_{position} {
+    , position_{position}
+    , value{val} {
     }
 
     const Id& GetId() const noexcept {
@@ -38,11 +40,16 @@ public:
         return width_;
     }
 
+    int GetValue() const noexcept {
+        return value;
+    }
+
 
 private:
     Id id_;
     Type type_;
     Position position_;
+    Value value;
 
     static constexpr double width_ = 0.0;
 };

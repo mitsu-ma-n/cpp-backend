@@ -1,5 +1,6 @@
 #include "collision_detector.h"
 #include <cassert>
+#include <variant>
 
 namespace collision_detector {
 
@@ -150,6 +151,20 @@ std::vector<OfficeSaveEvent> FindOfficeSaveEvents(const OfficeSaveProvider& prov
               });
 
     return detected_events;
+}
+
+bool operator<(const AllIvents& a, const AllIvents& b) {
+    double a_time, b_time;
+
+    std::visit([&](auto&& arg) {
+        a_time = arg.time;
+    }, a);
+
+    std::visit([&](auto&& arg) {
+        b_time = arg.time;
+    }, b);
+
+    return a_time < b_time;
 }
 
 }  // namespace collision_detector

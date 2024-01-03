@@ -65,7 +65,7 @@ SCENARIO("Collision detection") {
     }
     WHEN("no gatherers") {
         collision_detector::VectorItemGathererProvider provider{
-            {{{1, 2}, 5.}, {{0, 0}, 5.}, {{-5, 0}, 5.}}, {}};
+            {{0, {1, 2}, 5.}, {1, {0, 0}, 5.}, {2, {-5, 0}, 5.}}, {}};
         THEN("No events") {
             auto events = collision_detector::FindGatherEvents(provider);
             CHECK(events.empty());
@@ -73,17 +73,17 @@ SCENARIO("Collision detection") {
     }
     WHEN("multiple items on a way of gatherer") {
         collision_detector::VectorItemGathererProvider provider{{
-            {{9, 0.27}, .1},
-            {{8, 0.24}, .1},
-            {{7, 0.21}, .1},
-            {{6, 0.18}, .1},
-            {{5, 0.15}, .1},
-            {{4, 0.12}, .1},
-            {{3, 0.09}, .1},
-            {{2, 0.06}, .1},
-            {{1, 0.03}, .1},
-            {{0, 0.0}, .1},
-            {{-1, 0}, .1},
+            {0, {9, 0.27}, .1},
+            {1, {8, 0.24}, .1},
+            {2, {7, 0.21}, .1},
+            {3, {6, 0.18}, .1},
+            {4, {5, 0.15}, .1},
+            {5, {4, 0.12}, .1},
+            {6, {3, 0.09}, .1},
+            {7, {2, 0.06}, .1},
+            {8, {1, 0.03}, .1},
+            {9, {0, 0.0}, .1},
+            {10, {-1, 0}, .1},
             }, {
             {{0, 0}, {10, 0}, 0.1},
         }};
@@ -104,7 +104,7 @@ SCENARIO("Collision detection") {
     }
     WHEN("multiple gatherers and one item") {
         collision_detector::VectorItemGathererProvider provider{{
-                                                {{0, 0}, 0.},
+                                                {0, {0, 0}, 0.},
                                             },
                                             {
                                                 {{-5, 0}, {5, 0}, 1.},
@@ -120,7 +120,7 @@ SCENARIO("Collision detection") {
     }
     WHEN("Gatherers stay put") {
         collision_detector::VectorItemGathererProvider provider{{
-                                                {{0, 0}, 10.},
+                                                {0, {0, 0}, 10.},
                                             },
                                             {
                                                 {{-5, 0}, {-5, 0}, 1.},
