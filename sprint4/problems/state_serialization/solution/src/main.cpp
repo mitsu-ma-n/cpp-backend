@@ -174,6 +174,9 @@ int main(int argc, const char* argv[]) {
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
         });
+        // В этой точке все асинхронные операции уже завершены и можно 
+        // сохранить состояние сервера в файл
+        // <-----------------------------------        
     } catch (const std::exception& ex) {
         BOOST_LOG_TRIVIAL(error) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, EXIT_FAILURE}))
                                  << ex.what();
