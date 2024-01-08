@@ -70,6 +70,6 @@ struct SerPlayers {
 
 struct SerPlayerTokens {
     std::vector<std::string> tokens;
-}
+};
 
 }   // namespace serializer
