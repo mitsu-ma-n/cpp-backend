@@ -5,11 +5,13 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>  // add_console_log()
 #include <boost/program_options.hpp>
+#include <boost/signals2.hpp>
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <chrono>
 
 #include "server_params.h"
 #include "json_loader.h"
@@ -22,8 +24,11 @@
 #include "ticker.h"
 
 using namespace std::literals;
+using milliseconds = std::chrono::milliseconds;
+
 namespace net = boost::asio;
 namespace sys = boost::system;
+namespace sig = boost::signals2;
 
 namespace fs = std::filesystem;
 namespace logging = boost::log;
@@ -36,6 +41,10 @@ struct Args {
     unsigned long dt;
     std::string config_file;
     std::string static_path;
+    bool is_state_path_set = false;
+    std::string state_path;
+    bool is_save_state_period_set = false;
+    unsigned long save_state_period;
     bool is_random_spawn;
 };
 
@@ -54,6 +63,10 @@ struct Args {
         ("config-file,c", po::value(&args.config_file)->value_name("file"s), "set config file path")
         // Опция --www-root path, сохраняющая свой аргумент в поле args.static_path
         ("www-root,w", po::value(&args.static_path)->value_name("dir"s), "set static files root")
+        // Опция --state-file <путь-к-файлу>, сохраняющая свой аргумент в поле args.state_path
+        ("state-file,w", po::value(&args.state_path)->value_name("file"s), "set game state file path")
+        // Опция --save-state-period <игровое-время-в-миллисекундах>, сохраняющая свой аргумент в поле args.save_state_period
+        ("save-state-period,w", po::value(&args.save_state_period)->value_name("milliseconds"s), "set game state save period")
         // Опция --randomize-spawn-points, сохраняющая свой аргумент в поле args.is_random_spawn
         ("randomize-spawn-points", po::bool_switch(&args.is_random_spawn),"spawn dogs at random positions");
 
@@ -77,6 +90,10 @@ struct Args {
     }
     if (!vm.contains("www-root"s)) {
         throw std::runtime_error("Static files root is not specified"s);
+    }
+
+    if (vm.contains("state-file"s)) {
+        args.is_state_path_set = true;
     }
 
     // С опциями программы всё в порядке, возвращаем структуру args
@@ -129,6 +146,27 @@ int main(int argc, const char* argv[]) {
             ticker->Start();
         }
 
+        sig::scoped_connection conn;
+        if (args->is_state_path_set) {
+            // Пробуем азгрузить состояние игры из файла
+            if (true) {
+
+            } else { // Не получилось - выходим с ошибкой
+
+            }
+
+            // Если получилось и задано сохранение состояния по времени, то настраиваем обработчик
+            if (args->is_save_state_period_set) {
+                // Лямбда-функция будет вызываться всякий раз, когда Application будет слать сигнал tick
+                // Функция перестанет вызываться после разрушения conn.
+                conn = app.DoOnTick([total = 0ms](milliseconds delta) mutable {
+                    // TODO: Здесь сохраняем состояние игры в файл
+                    total += delta;
+                    std::cout << "Tick! Delta: " << delta.count() << "ms, Total: " << total.count() << "ms" << std::endl;
+                });
+            }
+        }
+
         // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         // Подписываемся на сигналы и при их получении завершаем работу сервера
         net::signal_set signals(ioc, SIGINT, SIGTERM);
@@ -176,7 +214,9 @@ int main(int argc, const char* argv[]) {
         });
         // В этой точке все асинхронные операции уже завершены и можно 
         // сохранить состояние сервера в файл
-        // <-----------------------------------        
+        if (args->is_state_path_set) {
+            // TODO: Здесь сохраняем состояние игры в файл
+        }
     } catch (const std::exception& ex) {
         BOOST_LOG_TRIVIAL(error) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, EXIT_FAILURE}))
                                  << ex.what();

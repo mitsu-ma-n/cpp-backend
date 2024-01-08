@@ -2,6 +2,7 @@
 
 #include "model_geom.h"
 #include "tagged.h"
+#include "serializer.h"
 
 #include <string>
 
@@ -42,6 +43,15 @@ public:
 
     int GetValue() const noexcept {
         return value;
+    }
+
+    serializer::SerItem GetSerItem() const noexcept {
+        serializer::SerItem item;
+        item.id = *id_;
+        item.type = type_;
+        item.position = position_;
+        item.value = value;
+        return item;
     }
 
 

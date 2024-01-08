@@ -3,6 +3,7 @@
 #include "model_geom.h"
 #include "tagged.h"
 #include "item.h"
+#include "serializer.h"
 
 #include <optional>
 
@@ -89,6 +90,21 @@ public:
             score_ += item.GetValue();
         }
         ClearBag();
+    }
+
+    serializer::SerDog GetSerDog() const
+    {
+        serializer::SerDog serDog;
+        serDog.id = *id_;
+        serDog.name = *name_;
+        serDog.position = position_;
+        serDog.speed = speed_;
+        serDog.direction = direction_;
+        for (auto item : bag_) {
+            serDog.bag.push_back(item.GetSerItem());
+        }
+        serDog.score = score_;
+        return serDog;
     }
 
 private:

@@ -27,7 +27,12 @@ PlayerActionResult Application::ExecutePlayerAction(std::string_view token, Play
 }
 
 TickResult Application::ExecuteTick(Tick tick) {
-    return tick_.ExecuteTick(tick);
+    auto tick_res = tick_.ExecuteTick(tick);
+    
+    // Уведомляем подписчиков сигнала tick
+    tick_signal_(tick.GetTimeDelta());
+
+    return tick_res;
 }
 
 }  // namespace app
