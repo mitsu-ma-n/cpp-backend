@@ -28,6 +28,7 @@ public:
     }
 
     Dog* AddDog(Position pos, const Dog::Name& name);
+    Dog* AddDog(const Dog& dog);
 
     const Dogs& GetDogs() const noexcept {
         return dogs_;

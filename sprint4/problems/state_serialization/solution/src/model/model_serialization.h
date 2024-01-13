@@ -27,6 +27,7 @@ void serialize(Archive& ar, Item& item, [[maybe_unused]] const unsigned version)
     ar & (*item.GetId());
     ar & (item.GetType());
     ar & (item.GetPosition());
+    ar & (item.GetValue());
 }
 
 }  // namespace model

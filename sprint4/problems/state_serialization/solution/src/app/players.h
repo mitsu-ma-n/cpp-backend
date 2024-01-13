@@ -135,6 +135,10 @@ public:
         return ser_players;
     }
 
+    const PlayersContainer& GetPlayers() const {
+        return players_;
+    }
+
 private:
     using NameHasher = util::TaggedHasher<model::Dog::Name>;
     using NameToIndex = std::unordered_map<model::Dog::Name, size_t, NameHasher>;

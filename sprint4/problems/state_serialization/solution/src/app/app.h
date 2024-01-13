@@ -9,11 +9,11 @@
 #include "player_use_case.h"
 #include "tick_use_case.h"
 
-//#include "app_listener.h"
-//#include "state_serializer.h"
+#include "app_serialization.h"
 
 #include <boost/signals2.hpp>
 #include <chrono>
+#include <filesystem>
 
 namespace app {
 
@@ -33,7 +33,7 @@ public:
         , tick_{game}
         , list_maps_{game}
         , get_map_{game}
-        //, state_serializer_{game, tokens_, players_}
+        , state_serializer_{game, players_, tokens_}
         {
     }
 
@@ -51,6 +51,9 @@ public:
     PlayerActionResult ExecutePlayerAction(std::string_view token, PlayerAction action);
     // Выполняет один шаг по времени в игре
     TickResult ExecuteTick(Tick tick);
+
+    // Сохранение состояния игры в файл
+    void SerializeApp(const std::filesystem::path& path);
 
     // Добавляем обработчик сигнала tick и возвращаем объект connection для управления,
     // при помощи которого можно отписаться от сигнала
@@ -72,9 +75,7 @@ private:
 
     TickSignal tick_signal_;
 
-    // StateSerializer state_serializer_;
-    //ApplicationListener* listener_ = nullptr;
-
+    serialization::StateSerializer state_serializer_;
 };
 
 }  // namespace app

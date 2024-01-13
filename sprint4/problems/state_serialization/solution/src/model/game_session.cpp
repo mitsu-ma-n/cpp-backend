@@ -30,6 +30,26 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
     return dogs_[index];
 }
 
+Dog* GameSession::AddDog(const Dog& dog) {
+    const size_t index = dogs_.size();  // Получаем незанятый индекс
+    // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
+    // Пробуем добавить
+    if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
+        throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
+    } else {
+        // Создаём на основе индекса и имени экземпляр собаки
+        Dog* new_dog = new Dog(model::Dog::Id(index), dog.GetName(), dog.GetPosition());
+        try {
+            dogs_.emplace_back(new_dog);
+        } catch (...) {
+            dog_id_to_index_.erase(it);
+            delete new_dog;
+            throw;
+        }
+    }
+    return dogs_[index];
+}
+
 Item* GameSession::AddItem(Position pos, Item::Type& type) {
     const size_t index = items_.size();  // Получаем незанятый индекс
     // Пробуем добавить
