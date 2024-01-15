@@ -5,26 +5,18 @@
 #include "loot_generator.h"
 
 #include <set>
+#include <memory>
 
 namespace model {
 
 class GameSession {
 public:
-    using Dogs = std::vector<Dog*>;
-    using Items = std::vector<Item*>;
+    using Dogs = std::vector<std::shared_ptr<Dog>>;
+    using Items = std::vector<std::shared_ptr<Item>>;
 
     GameSession(const Map& map, loot_gen::LootGenerator* loot_generator) noexcept
         : map_{&map}
         , loot_generator_{loot_generator} {
-    }
-
-    ~GameSession() {
-        for (auto dog : dogs_) {
-            delete dog;
-        }
-        for (auto item : items_) {
-            delete item;
-        }
     }
 
     Dog* AddDog(Position pos, const Dog::Name& name);
@@ -46,7 +38,7 @@ public:
 
     void Tick(TimeType dt) noexcept;
 
-    const Dog* FindDog(const Dog::Id& id) const noexcept;
+    Dog* FindDog(const Dog::Id& id) noexcept;
 
 private:
     std::optional<Item::Id> GetItemIdByIndex(size_t index);

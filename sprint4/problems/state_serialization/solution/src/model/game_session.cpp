@@ -2,8 +2,10 @@
 
 #include "collision_detector.h"
 
+#include <memory>
 #include <optional>
 #include <set>
+#include <type_traits>
 #include <unordered_set>
 #include <variant>
 
@@ -18,16 +20,14 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
         // Создаём на основе индекса и имени экземпляр собаки
-        Dog* new_dog = new Dog(model::Dog::Id(index), name, pos);
         try {
-            dogs_.emplace_back(new_dog);
+            dogs_.emplace_back(std::make_shared<Dog>(model::Dog::Id(index), name, pos));
         } catch (...) {
             dog_id_to_index_.erase(it);
-            delete new_dog;
             throw;
         }
     }
-    return dogs_[index];
+    return dogs_[index].get();
 }
 
 Dog* GameSession::AddDog(const Dog& dog) {
@@ -37,17 +37,14 @@ Dog* GameSession::AddDog(const Dog& dog) {
     if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
-        // Создаём на основе индекса и имени экземпляр собаки
-        Dog* new_dog = new Dog(model::Dog::Id(index), dog.GetName(), dog.GetPosition());
         try {
-            dogs_.emplace_back(new_dog);
+            dogs_.emplace_back(std::make_shared<Dog>(Dog::Id(index), dog.GetName(), dog.GetPosition()));
         } catch (...) {
             dog_id_to_index_.erase(it);
-            delete new_dog;
             throw;
         }
     }
-    return dogs_[index];
+    return dogs_[index].get();
 }
 
 Item* GameSession::AddItem(Position pos, Item::Type& type) {
@@ -57,16 +54,14 @@ Item* GameSession::AddItem(Position pos, Item::Type& type) {
         throw std::invalid_argument("Item with id "s + std::to_string(index) + " already exists"s);
     } else {
         // Создаём на основе индекса и имени экземпляр предмета
-        Item* new_item = new Item(model::Item::Id(index), type, pos);
         try {
-            items_.emplace_back(new_item);
+            items_.emplace_back(std::make_shared<Item>(Item::Id(index), type, pos));
         } catch (...) {
             item_id_to_index_.erase(it);
-            delete new_item;
             throw;
         }
     }
-    return items_[index];
+    return items_[index].get();
 }
 
 void GameSession::Tick(TimeType dt) noexcept {
@@ -161,9 +156,9 @@ void GameSession::Tick(TimeType dt) noexcept {
     }
 }
 
-const Dog* GameSession::FindDog(const Dog::Id& id) const noexcept {
+ Dog* GameSession::FindDog(const Dog::Id& id) noexcept {
     if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
-        return dogs_.at(it->second);
+        return dogs_.at(it->second).get();
     }
     return nullptr;
 }
@@ -231,7 +226,7 @@ void GameSession::ClearCollectedItems(const std::set<Item::Id>& collected_items)
         if (auto it = item_id_to_index_.find(item_id); it != item_id_to_index_.end()) {
             auto item_index = it->second;
             // Освобождаем память, потому что копия предмета теперь в рюкзаке
-            delete items_[item_index];
+            // delete items_[item_index];
             // Удаляем id предмета из таблицы
             item_id_to_index_.erase(item_id);
             if (!item_id_to_index_.empty()) {   // Остались ещё предметы

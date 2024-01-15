@@ -144,7 +144,7 @@ int main(int argc, const char* argv[]) {
         // Объект Application содержит сценарии использования
         app::Application app(game);
 
-        serialization::StateSerializer2 serializer(game, app);
+        serialization::StateSerializer serializer(game, app);
 
         if (args->is_dt_set) {
             // Настраиваем вызов метода Application::ExecuteTick каждые args->dt миллисекунд внутри strand

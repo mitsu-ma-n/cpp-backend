@@ -39,12 +39,8 @@ TickResult Application::ExecuteTick(Tick tick) {
     return tick_res;
 }
 
-void Application::SerializeApp(const std::filesystem::path& path) {
-    std::ofstream out{path, std::ios_base::binary};
-    boost::archive::binary_oarchive ar{out};
-
-    //ar << players_;
-    //ar << tokens_;
+AddPlayerResult Application::AddPlayer(const serialization::PlayerRepr& player, const Token& token) {
+    return add_player_.AddPlayer(player, token);
 }
 
 }  // namespace app

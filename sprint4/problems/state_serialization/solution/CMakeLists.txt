@@ -41,6 +41,8 @@ add_library(model STATIC
 target_include_directories(model PUBLIC src/model src/utils)
 
 add_library(app STATIC 
+	src/app/add_player_use_case.cpp
+	src/app/add_player_use_case.h
 	src/app/app.cpp
 	src/app/app.h
 	src/app/join_use_case.cpp

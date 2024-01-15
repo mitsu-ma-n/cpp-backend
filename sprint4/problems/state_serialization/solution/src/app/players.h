@@ -5,6 +5,7 @@
 #include "serializer.h"
 
 #include <random>
+#include <memory>
 
 namespace app {
 
@@ -29,8 +30,12 @@ public:
         return name_;
     }
 
-    model::Dog& GetDog() {
+    const model::Dog& GetDog() const {
         return *dog_;
+    }
+
+    void SetDogSpeed(model::DynamicDimension speed, std::optional<model::Direction> direction) {
+        dog_->SetSpeed(speed, direction);
     }
 
     model::GameSession* GetSession() const {
@@ -63,6 +68,9 @@ using Token = util::Tagged<std::string, detail::TokenTag>;
 
 class PlayerTokens {
 public:
+    using IdHasher = util::TaggedHasher<Player::Id>;
+    using PlayersIdsToTokens = std::unordered_map<Player::Id, Token, IdHasher>;
+
     PlayerTokens() {}
 
     // Возвращает указатель на игрока с заданным token
@@ -70,16 +78,18 @@ public:
     // Генерирует для указанного игрока токен и сохраняет получившуюся пару у себя.
     // Затем возвращает сгенерированный токен
     Token AddPlayer(Player& player);
-
-    serializer::SerPlayerTokens GetSerPlayerTokens() const {
-        serializer::SerPlayerTokens ser_tokens;
-        for (auto [token, player] : token_to_player) {
-            // TODO: Указатели складывать нельзя. 
-            // При десиреализации нужно будет искать ссылку на существующего игрока
-            ser_tokens.tokens.push_back(*token);
-        }
-        return ser_tokens;
+    // Добавляет ccылку на игрока с уже известным токеном
+    void AddPlayer(Player* player, Token token) {
+        token_to_player[token] = player;
     }
+    // Возвращет балицу игроков в виде id - Token
+    PlayersIdsToTokens GetPlayersTokens() const {
+        std::unordered_map<Player::Id, Token, IdHasher> player_id_to_token;
+        for (const auto& [token, player] : token_to_player) {
+            player_id_to_token[player->GetId()] = token;
+        }
+        return player_id_to_token;
+    };
 
 
 private:
@@ -110,16 +120,12 @@ private:
 ///  ---  Players  ---  ///
 class Players {
 public:
-    using PlayersContainer = std::vector<Player*>;
-
-    ~Players() {
-        for (auto player : players_) {
-            delete player;
-        }
-    }
+    using PlayersContainer = std::vector<std::shared_ptr<Player>>;
 
     // Добавляет нового игрока, который будет управлять собакой dog в игровой сессии session
     Player& Add(model::Dog* dog, model::GameSession& session);
+    // Добавляет существующего игрока, который будет управлять собакой dog в игровой сессии session
+    void Add(std::unique_ptr<Player> player);
     // Возврщает указатель на игрока, который управляет собакой dog на карте map
     Player* FinByDog(model::Dog dog);
 
