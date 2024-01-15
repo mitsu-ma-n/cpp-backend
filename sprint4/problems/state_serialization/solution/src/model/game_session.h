@@ -20,13 +20,14 @@ public:
     }
 
     Dog* AddDog(Position pos, const Dog::Name& name);
-    Dog* AddDog(const Dog& dog);
+    void AddDog(const Dog& dog);
 
     const Dogs& GetDogs() const noexcept {
         return dogs_;
     }
 
     Item* AddItem(Position pos, Item::Type& type);
+    void AddItem(const Item& item);
 
     const Items& GetItems() const noexcept {
         return items_;

@@ -6,6 +6,7 @@
 
 #include <random>
 #include <memory>
+#include <map>
 
 namespace app {
 
@@ -126,8 +127,8 @@ public:
     Player& Add(model::Dog* dog, model::GameSession& session);
     // Добавляет существующего игрока, который будет управлять собакой dog в игровой сессии session
     void Add(std::unique_ptr<Player> player);
-    // Возврщает указатель на игрока, который управляет собакой dog на карте map
-    Player* FinByDog(model::Dog dog);
+    // Возврщает указатель на игрока, который управляет собакой dog в игровой сессии session
+    Player* FinByDog(const model::Dog& dog, const model::GameSession& session);
 
     serializer::SerPlayers GetSerPlayers() const {
         serializer::SerPlayers ser_players;
@@ -146,8 +147,9 @@ public:
     }
 
 private:
-    using NameHasher = util::TaggedHasher<model::Dog::Name>;
-    using NameToIndex = std::unordered_map<model::Dog::Name, size_t, NameHasher>;
+    // Пришлось перейти на multimap, потому что игроки с одинаковыми именами могут подключаться 
+    // к разным картам, то есть находиться в разных сессиях
+    using NameToIndex = std::multimap<model::Dog::Name, size_t>;
 
     PlayersContainer players_;
     NameToIndex name_to_index_;

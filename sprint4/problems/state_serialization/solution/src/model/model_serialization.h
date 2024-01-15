@@ -116,11 +116,9 @@ public:
         for (const auto& dog : session.GetDogs()) {
             dogs_.push_back(DogRepr(*dog));
         }
-        /*
         for (const auto& item : session.GetItems()) {
-            items_.push_back(*item);
+            items_.push_back(ItemRepr(*item));
         }
-        */
         map_id_ = session.GetMap().GetId();
     }
 
@@ -134,16 +132,20 @@ public:
         return dogs_;
     }
 
+    const std::vector<ItemRepr>& GetItems() const {
+        return items_;
+    }
+
     template <typename Archive>
     void serialize(Archive& ar, [[maybe_unused]] const unsigned version) {
         ar & dogs_;
-        //ar & items_;
+        ar & items_;
         ar & *map_id_;
     }
 
 private:
     std::vector<DogRepr> dogs_;
-    std::vector<model::Item> items_;
+    std::vector<ItemRepr> items_;
     model::Map::Id map_id_ = model::Map::Id{""};
 };
 

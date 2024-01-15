@@ -48,9 +48,6 @@ public:
             ar << PlayerRepr(*player);
         }
 
-        //ar << "Some data";
-        //std::cout << "StateSerializer2::Serialize" << std::endl;
-
         std::rename(tmp_file.c_str(), path.c_str());
     }
 
@@ -70,6 +67,9 @@ public:
             for ( const auto& dog_repr : session_repr.GetDogs() ) {
                 session->AddDog(dog_repr.Restore());
             }
+            for ( const auto& item_repr : session_repr.GetItems() ) {
+                session->AddItem(item_repr.Restore());
+            }
         }
 
         // Загружаем токены авторизации игроков
@@ -86,12 +86,6 @@ public:
             ar >> player_repr;
             app_->AddPlayer(player_repr, tokens_table[player_repr.GetId()]);
         }
-
-        // ar << *game_.;
-        // ar << *app_;
-
-        //ar << "Some data";
-        //std::cout << "StateSerializer2::Serialize" << std::endl;
     }
 
 public:

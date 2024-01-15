@@ -30,21 +30,17 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
     return dogs_[index].get();
 }
 
-Dog* GameSession::AddDog(const Dog& dog) {
-    const size_t index = dogs_.size();  // Получаем незанятый индекс
-    // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
+void GameSession::AddDog(const Dog& dog) {
+    const size_t index = *dog.GetId();  // Получаем сохранённый индекс
     // Пробуем добавить
     if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
-        try {
-            dogs_.emplace_back(std::make_shared<Dog>(Dog::Id(index), dog.GetName(), dog.GetPosition()));
-        } catch (...) {
-            dog_id_to_index_.erase(it);
-            throw;
+        if ( index >= dogs_.size() ) {
+            dogs_.resize(index + 1);
         }
+        dogs_[index] = std::make_shared<Dog>(dog);
     }
-    return dogs_[index].get();
 }
 
 Item* GameSession::AddItem(Position pos, Item::Type& type) {
@@ -62,6 +58,19 @@ Item* GameSession::AddItem(Position pos, Item::Type& type) {
         }
     }
     return items_[index].get();
+}
+
+void GameSession::AddItem(const Item& item) {
+    const size_t index = *item.GetId();  // Получаем сохранённый индекс
+    // Пробуем добавить
+    if (auto [it, inserted] = item_id_to_index_.emplace(index, index); !inserted) {
+        throw std::invalid_argument("Item with id "s + std::to_string(index) + " already exists"s);
+    } else {
+        if ( index >= items_.size() ) {
+            items_.resize(index + 1);
+        }
+        items_[index] = std::make_shared<Item>(item);
+    }
 }
 
 void GameSession::Tick(TimeType dt) noexcept {
