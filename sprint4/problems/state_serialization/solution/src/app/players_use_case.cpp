@@ -16,7 +16,7 @@ ListPlayersResult ListPlayersUseCase::GetPlayers(Token token) {
         // Для каждой собаки находим игрока и складываем в результат
         for ( auto dog : dogs ) {
             auto dog_name = dog->GetName();
-            auto player = players_->FinByDog(*dog);
+            auto player = players_->FinByDog(*dog, *session);
             res.push_back({player->GetId(), player->GetName()});
         }
     } else {

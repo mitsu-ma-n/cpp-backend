@@ -41,7 +41,7 @@ PlayerActionResult PlayerActionUseCase::ExecutePlayerAction(Token token, PlayerA
         }
 
         dog_speed = self_player->GetSession()->GetMap().GetDogSpeed().value();
-        self_player->GetDog().SetSpeed(dog_speed, move);
+        self_player->SetDogSpeed(dog_speed, move);
     } else {
         throw PlayerActionError{PlayerActionErrorReason::InvalidToken};
     }
