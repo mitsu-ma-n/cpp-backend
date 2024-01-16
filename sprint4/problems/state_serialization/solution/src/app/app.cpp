@@ -1,5 +1,9 @@
 #include "app.h"
 
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <fstream>
+
 namespace app {
 
 model::Game::Maps Application::ListMaps() {
@@ -33,6 +37,10 @@ TickResult Application::ExecuteTick(Tick tick) {
     tick_signal_(tick.GetTimeDelta());
 
     return tick_res;
+}
+
+AddPlayerResult Application::AddPlayer(const serialization::PlayerRepr& player, const Token& token) {
+    return add_player_.AddPlayer(player, token);
 }
 
 }  // namespace app
