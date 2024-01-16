@@ -23,6 +23,8 @@ public:
         , direction_{direction} {
     }
 
+    Dog(const Dog& other) = default;
+
     const Id& GetId() const noexcept {
         return id_;
     }

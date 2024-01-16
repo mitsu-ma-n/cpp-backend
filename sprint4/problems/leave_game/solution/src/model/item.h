@@ -21,6 +21,8 @@ public:
     , value{val} {
     }
 
+    Item(const Item& item) = default;
+
     const Id& GetId() const noexcept {
         return id_;
     }

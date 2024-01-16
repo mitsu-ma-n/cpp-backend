@@ -27,7 +27,7 @@ JoinGameResult JoinGameUseCase::JoinGame(model::Map::Id map_id, Player::Name nam
     if ( !map ) {
         throw JoinGameError{JoinGameErrorReason::InvalidMap};
     }
-    
+
     if ( auto session = game_->FindSession(model::Map::Id{map_id}) ) {
         auto spawn_point = map->GetRandomPointOnMap();
         try {

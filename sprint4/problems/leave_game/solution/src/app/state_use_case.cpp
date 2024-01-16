@@ -16,13 +16,15 @@ GetStateResult GetStateUseCase::GetState(Token token) {
         // Для каждой собаки находим игрока и складываем в результат
         for ( auto dog : dogs ) {
             auto dog_name = dog->GetName();
-            auto player = players_->FinByDog(*dog);
+            auto player = players_->FinByDog(*dog, *session);
             StatePlayerInfo info{player->GetId(), *dog};
             res.players_.push_back(info);
         }
 
         // Для карты выдаём список лута на ней
-        res.items_ = session->GetItems();
+        for ( auto item : session->GetItems() ) {
+            res.items_.push_back(item.get());
+        }
     } else {
         throw GetStateError{GetStateErrorReason::InvalidToken};
     }
