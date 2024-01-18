@@ -9,6 +9,7 @@
 #include "player_use_case.h"
 #include "tick_use_case.h"
 #include "add_player_use_case.h"
+#include "records_use_case.h"
 
 #include "postgres/postgres.h"
 
@@ -36,6 +37,7 @@ public:
         , get_map_{game}
         , add_player_{game, tokens_, players_}
         , db_{ pqxx::connection{db_url} }
+        , records_use_case_{players_, db_}
         {
     }
 
@@ -72,9 +74,13 @@ public:
         return tick_signal_.connect(handler);
     }
 
+    // Выдаёт список рекордов
+    RecordsResult GetRecords(size_t start, size_t limit);
+
 private:
     Players players_;
     PlayerTokens tokens_;
+    postgres::Database db_;
 
     JoinGameUseCase join_game_;
     ListPlayersUseCase list_players_;
@@ -86,9 +92,7 @@ private:
     AddPlayerUseCase add_player_;
 
     TickSignal tick_signal_;
-
-    postgres::Database db_;
-
+    RecordsUseCase records_use_case_;
 };
 
 }  // namespace app

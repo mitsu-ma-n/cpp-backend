@@ -9,6 +9,7 @@
 #include "state_use_case.h"
 #include "player_use_case.h"
 #include "tick_use_case.h"
+#include "records_use_case.h"
 #include "extra_data.h"
 
 namespace model {
@@ -40,6 +41,7 @@ namespace app {
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GetStateResult const& state_result);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, PlayerActionResult const& action_result);
     void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, TickResult const& action_result);
+    void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, RecordsResult const& action_result);
 } // namespace app
 
 namespace json_loader {

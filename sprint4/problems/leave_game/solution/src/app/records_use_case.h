@@ -1,22 +1,35 @@
 #pragma once
 
-#include "game.h"
+#include "players.h"
+#include "postgres/postgres.h"
 
 namespace app {
 
+struct RecorsInfo {
+    size_t start;
+    size_t limit;
+};
+
+struct RecordsResult {
+    std::vector<PlayerStatInfo> records;
+};
+   
+
 class RecordsUseCase {
 public:
-    RecordsUseCase(model::Game& game) 
-        : game_{&game} {
+    RecordsUseCase(Players& players, postgres::Database& db) 
+        : players_{&players}
+        , db_{&db} {
     }
 
     // Получаем список карт
-    const model::Game::Maps& GetMaps() {
-        return game_->GetMaps();
+    RecordsResult GetRecords(RecorsInfo info) {
+        return RecordsResult(db_->GetPlayers().GetRecords(info.start, info.limit));
     }
 
 private:
-    model::Game* game_;
+    Players* players_;
+    postgres::Database* db_;
 };
 
 }  // namespace app

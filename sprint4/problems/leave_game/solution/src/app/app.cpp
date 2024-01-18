@@ -35,6 +35,9 @@ TickResult Application::ExecuteTick(Tick tick) {
     auto tick_res = tick_.ExecuteTick(tick);
 
     // Удаляем неактивных игроков с сохранением их достижений в БД
+    db_.GetPlayers().Save(app::PlayerRecordInfo{});
+    // Получение записей из БД
+    auto records = db_.GetPlayers().GetRecords(0, 100);
     
     
     // Уведомляем подписчиков сигнала tick
@@ -46,5 +49,10 @@ TickResult Application::ExecuteTick(Tick tick) {
 AddPlayerResult Application::AddPlayer(const serialization::PlayerRepr& player, const Token& token) {
     return add_player_.AddPlayer(player, token);
 }
+
+RecordsResult Application::GetRecords(size_t start, size_t limit) {
+    return records_use_case_.GetRecords({start, limit});
+}
+
 
 }  // namespace app

@@ -52,6 +52,7 @@ private:
     StringResponse GetStateResponse(const StringRequest& req, const std::vector<std::string>& segments);
     StringResponse GetPlayerActionResponse(const StringRequest& req, const std::vector<std::string>& segments);
     StringResponse GetTickResponse(const StringRequest& req, const std::vector<std::string>& segments);
+    StringResponse GetRecordsResponse(const StringRequest& req, const std::vector<std::string>& segments);
 
     // Функции проверки доступа к элементам АПИ
     bool isValidVersion(const std::vector<std::string>&  segments) const;
@@ -62,6 +63,7 @@ private:
     bool isStateRequest(const std::vector<std::string>&  segments) const;
     bool isPlayerActionRequest(const std::vector<std::string>&  segments) const;
     bool isTickRequest(const std::vector<std::string>&  segments) const;
+    bool isRecordsRequest(const std::vector<std::string>&  segments) const;
 
     http::status JoinGame(JoinParams params, std::string& response_body);
     http::status GetMaps(std::string& response, const std::vector<std::string>& segments) const;
@@ -70,6 +72,7 @@ private:
     http::status GetState(std::string_view token, std::string& response_body);
     http::status ExecutePlayerAction(std::string_view token, PlayerActionParams params, std::string& response_body);
     http::status ExecuteTick(TickParams params, std::string& response_body);
+    http::status GetRecords(size_t start, size_t limit, std::string& response_body);
 
     // Создаёт StringResponse с заданными параметрами
     StringResponse MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,

@@ -4,6 +4,7 @@
 #include "api_handler.h"
 #include "boost/json/value_to.hpp"
 // Позволяет загрузить содержимое файла в виде строки:
+#include <boost/json/array.hpp>
 #include <boost/json/serialize.hpp>
 #include <boost/json/value_from.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -402,6 +403,20 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::TickRe
     json::object object;    // Пустой объект
     object.clear();
     jv.emplace_object() = object;
+}
+
+void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, RecordsResult const& action_result) {
+    json::array records;
+
+    for (const auto& record : action_result.records) {
+        json::object object_record;
+        object_record[json_field::RECORD_NAME] = json::value_from(record.name);
+        object_record[json_field::RECORD_SCORE] = json::value_from(record.score);
+        object_record[json_field::RECORD_TIME] = json::value_from(record.play_time);
+        records.push_back(object_record);
+    }
+
+    jv = records;
 }
 
 } // namespace app

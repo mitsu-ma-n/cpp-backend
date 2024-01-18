@@ -92,4 +92,8 @@ namespace json_field {
     constexpr static char PLAYER_ACTION_MOVE_DIRECTION[]  = "move";
     // TickParams
     constexpr static char TICK_DT[]  = "timeDelta";
+    // RecordsResult
+    constexpr static char RECORD_NAME[]  = "name";
+    constexpr static char RECORD_SCORE[] = "score";
+    constexpr static char RECORD_TIME[]  = "playTime";
 }

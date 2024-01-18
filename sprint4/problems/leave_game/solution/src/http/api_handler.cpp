@@ -3,6 +3,7 @@
 #include "join_use_case.h"
 #include "player_use_case.h"
 #include "players_use_case.h"
+#include "records_use_case.h"
 #include "state_use_case.h"
 #include "maps_use_case.h"
 
@@ -20,6 +21,9 @@
 #include "json_loader.h"
 #include "http_handler_defs.h"
 #include "tick_use_case.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 namespace json = boost::json;
 namespace urls = boost::urls;
@@ -130,6 +134,8 @@ StringResponse ApiHandler::GetGameResponse(const StringRequest& req, const std::
         return GetPlayerActionResponse(req, segments);
     } else if ( isTickRequest(segments) ) {
         return GetTickResponse(req, segments);
+    } else if ( isRecordsRequest(segments) ) {
+        return GetRecordsResponse(req, segments);
     }
     // Неизвестная цель запроса
     auto body = GenerateErrorResponse(json_field::API_CODE_BAD_REQUEST, "Bad request to the game");
@@ -430,6 +436,48 @@ http::status ApiHandler::ExecuteTick(TickParams params, std::string& response_bo
     response_body = boost::json::serialize(json::value_from(res));
     return http::status::ok;
 }
+
+bool ApiHandler::isRecordsRequest(const std::vector<std::string>&  segments) const {
+    return segments[api_strings::LVL3_POS] == api_strings::RECORDS_PATH;
+}
+
+StringResponse ApiHandler::GetRecordsResponse(const StringRequest& req, const std::vector<std::string>& segments) {
+    std::string req_target(req.target());
+    std::string content_type(ContentType::APP_JSON);
+    std::string response_body;
+    std::string_view allowed_method(AllowedMethods::RECORDS);
+
+    http::status status = http::status::ok;
+
+    size_t start = 0, limit = 100;  // Значения по умолчанию
+
+    try {
+        urls::url_view u(req_target);
+        // Парсим параметры
+        for (auto param : u.params()) {
+            if (param.key == "start" && param.has_value) {
+                start = std::stoull(param.value);
+            } else if (param.key == "maxItems" && param.has_value) {
+                limit = std::stoull(param.value);
+            }
+        }
+    } catch (...) {
+        throw std::runtime_error("Invalid URL: "s + req_target);
+    }
+
+    status = GetRecords(start, limit, response_body);
+
+    auto response = this->MakeStringResponse(status, response_body, response_body.size(), req.version(), req.keep_alive(), content_type, allowed_method);
+    response.set(http::field::cache_control, HttpFildsValue::NO_CACHE);
+    return response;
+}
+
+http::status ApiHandler::GetRecords(size_t start, size_t limit, std::string& response_body) {
+    app::RecordsResult res = app_.GetRecords(start, limit);
+    response_body = boost::json::serialize(json::value_from(res));
+    return http::status::ok;
+}
+
 
 // Создаёт StringResponse с заданными параметрами
 StringResponse ApiHandler::MakeStringResponse(http::status status, std::string_view body, size_t size, unsigned http_version,
