@@ -443,8 +443,11 @@ std::pair<Game, extra_data::MapsLootTypes> LoadGame(const std::filesystem::path&
     // загрузка lootGeneratorConfig
     auto loot_gen_info = boost::json::value_to<loot_gen::LootGeneratorInfo>(obj.at(std::string(json_field::GAME_LOOT_GENERATOR_CONFIG)));
 
+    // Загрузка времени допустимого бездействия игрока
+    auto dog_retirement_time = value_to<double>(obj.at(std::string(json_field::GAME_DOG_RETIREMENT_TIME)));
+
     // Создаём пустую игру
-    Game game(loot_gen_info, default_dog_speed, default_bag_capacity);
+    Game game(loot_gen_info, default_dog_speed, default_bag_capacity, dog_retirement_time);
     extra_data::MapsLootTypes lootTypes;
 
     // Добавляем карты в игру

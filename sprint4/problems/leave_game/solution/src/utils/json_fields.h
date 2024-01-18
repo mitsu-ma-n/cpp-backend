@@ -6,6 +6,7 @@ namespace json_field {
     constexpr static char GAME_DEFAULT_BAG_CAPACITY[]  = "defaultBagCapacity";
     constexpr static char GAME_MAPS[]                  = "maps";
     constexpr static char GAME_LOOT_GENERATOR_CONFIG[] = "lootGeneratorConfig";
+    constexpr static char GAME_DOG_RETIREMENT_TIME[]   = "dogRetirementTime";
     // LootGeneratorInfo
     constexpr static char LOOT_GENERATOR_CONFIG_PERIOD[]      = "period";
     constexpr static char LOOT_GENERATOR_CONFIG_PROBABILITY[] = "probability";

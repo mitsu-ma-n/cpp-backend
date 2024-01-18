@@ -26,6 +26,7 @@ add_library(model STATIC
 	src/model/map.h
 	src/model/model_geom.cpp
 	src/model/model_geom.h
+	src/model/model_serialization.h
 	src/model/road.cpp
 	src/model/road.h
 	src/model/utils.cpp
@@ -43,6 +44,7 @@ target_include_directories(model PUBLIC src/model src/utils)
 add_library(app STATIC 
 	src/app/add_player_use_case.cpp
 	src/app/add_player_use_case.h
+	src/app/app_serialization.h
 	src/app/app.cpp
 	src/app/app.h
 	src/app/join_use_case.cpp
@@ -51,20 +53,30 @@ add_library(app STATIC
 	src/app/maps_use_case.h
 	src/app/player_use_case.cpp
 	src/app/player_use_case.h
+	src/app/players_fwd.h
 	src/app/players_use_case.cpp
 	src/app/players_use_case.h
 	src/app/players.cpp
 	src/app/players.h
+	src/app/records_use_case.cpp
+	src/app/records_use_case.h
 	src/app/state_use_case.cpp
 	src/app/state_use_case.h
 	src/app/tick_use_case.cpp
 	src/app/tick_use_case.h
+	src/app/use_cases_impl.cpp
+	src/app/use_cases_impl.h
+	src/app/use_cases.h
 	src/extra_data/extra_data.cpp
 	src/extra_data/extra_data.h
+	src/postgres/postgres.cpp
+	src/postgres/postgres.h
+	src/utils/tagged_uuid.cpp
+	src/utils/tagged_uuid.h
 )
 
-target_include_directories(app PUBLIC src src/app src/model src/extra_data src/utils CONAN_PKG::boost)
-target_link_libraries(app PUBLIC CONAN_PKG::boost)
+target_include_directories(app PUBLIC src src/app src/model src/extra_data src/utils CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
+target_link_libraries(app PUBLIC CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
 
 add_library(http STATIC 
 	src/http/api_handler.cpp
@@ -83,8 +95,8 @@ add_library(http STATIC
 	src/sdk.h
 )
 
-target_include_directories(http PUBLIC src src/app src/http src/model src/utils src/extra_data CONAN_PKG::boost)
-target_link_libraries(http PUBLIC CONAN_PKG::boost)
+target_include_directories(http PUBLIC src src/app src/http src/model src/utils src/extra_data CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
+target_link_libraries(http PUBLIC CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
 
 add_library(utils STATIC 
 	src/utils/boost_json.cpp
@@ -97,8 +109,8 @@ add_library(utils STATIC
 	src/utils/ticker.h
 )
 
-target_include_directories(utils PUBLIC src src/model src/utils src/http src/app src/extra_data CONAN_PKG::boost)
-target_link_libraries(utils PUBLIC CONAN_PKG::boost)
+target_include_directories(utils PUBLIC src src/model src/utils src/http src/app src/extra_data CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
+target_link_libraries(utils PUBLIC CONAN_PKG::boost CONAN_PKG::libpq CONAN_PKG::libpqxx)
 
 add_executable(game_server
 	src/main.cpp

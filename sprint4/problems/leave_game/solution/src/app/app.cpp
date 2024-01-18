@@ -31,7 +31,11 @@ PlayerActionResult Application::ExecutePlayerAction(std::string_view token, Play
 }
 
 TickResult Application::ExecuteTick(Tick tick) {
+    // Выполняем один шаг по времени
     auto tick_res = tick_.ExecuteTick(tick);
+
+    // Удаляем неактивных игроков с сохранением их достижений в БД
+    
     
     // Уведомляем подписчиков сигнала tick
     tick_signal_(tick.GetTimeDelta());

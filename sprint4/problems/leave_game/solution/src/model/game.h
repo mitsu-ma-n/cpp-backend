@@ -10,10 +10,12 @@ public:
     using Maps = std::vector<Map>;
     using GameSessions = std::vector<GameSession*>;
 
-    Game(loot_gen::LootGeneratorInfo info, DynamicDimension dogSpeed = 1.0, int bag_capacity = 3) noexcept
+    Game(loot_gen::LootGeneratorInfo info, DynamicDimension dogSpeed = 1.0, 
+        int bag_capacity = 3, double dog_retirement_time = 15.0) noexcept
         : loot_generator_(info.GetPeriodInMilliseconds(), info.GetProbability())
         , defuault_dog_speed_{dogSpeed}
-        , default_bag_capacity_{bag_capacity} {
+        , default_bag_capacity_{bag_capacity}
+        , dog_retirement_time_{dog_retirement_time} {
     }
 
     ~Game() {
@@ -44,12 +46,17 @@ public:
         defuault_dog_speed_ = dog_speed;
     }
 
+    const double GetDogRetirementTime() const noexcept {
+        return dog_retirement_time_;
+    }
+
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
 
     DynamicDimension defuault_dog_speed_;
     int default_bag_capacity_;
+    double dog_retirement_time_;
 
     Maps maps_;
     MapIdToIndex map_id_to_map_index_;

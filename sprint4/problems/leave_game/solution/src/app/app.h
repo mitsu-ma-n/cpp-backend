@@ -10,6 +10,8 @@
 #include "tick_use_case.h"
 #include "add_player_use_case.h"
 
+#include "postgres/postgres.h"
+
 #include <boost/signals2.hpp>
 #include <chrono>
 #include <filesystem>
@@ -24,7 +26,7 @@ class Application {
 public:
     using TickSignal = sig::signal<void(milliseconds delta)>;
 
-    Application(model::Game& game)
+    Application(model::Game& game, std::string db_url)
         : join_game_{game, tokens_, players_}
         , list_players_{tokens_, players_}
         , game_state_{tokens_, players_}
@@ -33,6 +35,7 @@ public:
         , list_maps_{game}
         , get_map_{game}
         , add_player_{game, tokens_, players_}
+        , db_{ pqxx::connection{db_url} }
         {
     }
 
@@ -83,6 +86,9 @@ private:
     AddPlayerUseCase add_player_;
 
     TickSignal tick_signal_;
+
+    postgres::Database db_;
+
 };
 
 }  // namespace app

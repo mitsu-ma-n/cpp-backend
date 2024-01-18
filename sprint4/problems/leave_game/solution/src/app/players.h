@@ -2,6 +2,7 @@
 
 #include "game_session.h"
 #include "utils.h"
+#include "tagged_uuid.h"
 #include "serializer.h"
 
 #include <random>
@@ -50,6 +51,26 @@ public:
         return player;
     }
 
+    double GetPlayTime() const {
+        return play_time_;
+    }
+
+    void AddPlayTime(double time) {
+        play_time_ += time;
+    }
+
+    double GetSleepTime() const {
+        return dog_->GetSleepTime();
+    }
+
+    bool HasRetirementState() const {
+        // Собака не активна и время её бездействия превышает время бездействия на карте
+        auto map = session_->GetMap();
+        auto dog_sleep_time = dog_->GetSleepTime();
+        //return !dog_->IsActive() && play_time_ - dog_sleep_time > RetirementTime();
+        return false;
+    }
+
 private:
     Id id_;
     Name name_;
@@ -58,7 +79,39 @@ private:
     model::GameSession* session_;
     // Собака, которой управляет игрок
     model::Dog* dog_;
+
+    // Время в игре в секундах
+    double play_time_{0.0};
 };
+
+namespace detail {
+struct PlayerTag {};
+}  // namespace detail
+
+using PlayerId = util::TaggedUUID<detail::PlayerTag>;
+
+struct PlayerRecordInfo {
+    PlayerId id;
+    std::string name;
+    int score;
+    double play_time;
+};
+
+struct PlayerStatInfo {
+    std::string name;
+    int score;
+    double play_time;
+};
+
+class PlayerRepository {
+public:
+    virtual void Save(const PlayerRecordInfo& player) = 0;
+    virtual std::vector<PlayerStatInfo> GetRecords(size_t start, size_t limit) = 0;
+
+protected:
+    ~PlayerRepository() = default;
+};
+
 
 ///  ---  PlayerTokens  ---  ///
 namespace detail {

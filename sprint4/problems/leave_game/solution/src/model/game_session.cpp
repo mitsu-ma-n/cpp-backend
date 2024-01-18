@@ -258,8 +258,12 @@ void GameSession::ClearCollectedItems(const std::set<Item::Id>& collected_items)
 
 Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
     if( dog.GetSpeed() == Speed{0.0, 0.0} ) {
+        dog.AddSleepTime(dt.count()/1000.0);
         return dog.GetPosition();
     }
+
+    // Скорость не ноль, значит собака в движении
+    dog.ResetSleepTime();
 
     // Направление движения собаки
     Direction dog_direction = dog.GetDirection();

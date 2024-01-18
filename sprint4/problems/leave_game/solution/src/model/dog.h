@@ -94,6 +94,22 @@ public:
         ClearBag();
     }
 
+    bool IsActive() const {
+        return speed_.ux != 0.0 || speed_.uy != 0.0;
+    }
+
+    void AddSleepTime(double time) {
+        sleep_time_ += time;
+    }
+
+    double GetSleepTime() const {
+        return sleep_time_;
+    }
+
+    void ResetSleepTime() {
+        sleep_time_ = 0.0;
+    }
+
     serializer::SerDog GetSerDog() const
     {
         serializer::SerDog serDog;
@@ -117,6 +133,8 @@ private:
     Direction direction_;
     Bag bag_;
     int score_ = 0;
+
+    double sleep_time_{0.0};
 
     static constexpr double width_ = 0.6;
 };

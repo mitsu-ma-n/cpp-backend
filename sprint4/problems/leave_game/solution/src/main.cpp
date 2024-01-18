@@ -141,10 +141,17 @@ int main(int argc, const char* argv[]) {
         // strand для выполнения запросов к API
         auto api_strand = net::make_strand(ioc);
 
+        //const char* db_url = std::getenv("DB_URL");
+        const char* db_url = "postgres://postgres:debiloid@localhost:5432/test_db";
+        if (!db_url) {
+            throw std::runtime_error("DB URL is not specified");
+        }
+
         // Объект Application содержит сценарии использования
-        app::Application app(game);
+        app::Application app(game, db_url);
 
         serialization::StateSerializer serializer(game, app);
+        //serialization::StateSerializer serializer(game, app);
 
         if (args->is_dt_set) {
             // Настраиваем вызов метода Application::ExecuteTick каждые args->dt миллисекунд внутри strand
@@ -172,7 +179,6 @@ int main(int argc, const char* argv[]) {
                 // Функция перестанет вызываться после разрушения conn.
                 // TODO: убрать args из лямбды
                 conn = app.DoOnTick([total = 0ms, &serializer, &args](milliseconds delta) mutable {
-                    // TODO: Здесь сохраняем состояние игры в файл
                     serializer.Serialize(args->state_path);
                     total += delta;
                     std::cout << "Tick! Delta: " << delta.count() << "ms, Total: " << total.count() << "ms" << std::endl;
