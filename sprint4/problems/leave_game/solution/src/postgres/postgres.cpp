@@ -15,7 +15,7 @@ void PlayerRepositoryImpl::Save(const app::PlayerRecordInfo& player) {
     work.exec_params(
         R"(
 INSERT INTO records (id, name, score, play_time) VALUES ($1, $2, $3, $4)
-ON CONFLICT (id) DO UPDATE SET name=$2 score=$3 play_time=$4;
+ON CONFLICT (id) DO UPDATE SET name=$2, score=$3, play_time=$4;
 )"_zv,
         player.id.ToString(), player.name, player.score, player.play_time);
     work.commit();

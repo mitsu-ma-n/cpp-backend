@@ -40,6 +40,7 @@ public:
     void Tick(TimeType dt) noexcept;
 
     Dog* FindDog(const Dog::Id& id) noexcept;
+    void RemoveDog(const Dog::Id& id);
 
 private:
     std::optional<Item::Id> GetItemIdByIndex(size_t index);

@@ -1,4 +1,5 @@
 #include "app.h"
+#include "players.h"
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -35,10 +36,7 @@ TickResult Application::ExecuteTick(Tick tick) {
     auto tick_res = tick_.ExecuteTick(tick);
 
     // Удаляем неактивных игроков с сохранением их достижений в БД
-    db_.GetPlayers().Save(app::PlayerRecordInfo{});
-    // Получение записей из БД
-    auto records = db_.GetPlayers().GetRecords(0, 100);
-    
+    SaveRetirementPlayers();
     
     // Уведомляем подписчиков сигнала tick
     tick_signal_(tick.GetTimeDelta());
@@ -52,6 +50,21 @@ AddPlayerResult Application::AddPlayer(const serialization::PlayerRepr& player, 
 
 RecordsResult Application::GetRecords(size_t start, size_t limit) {
     return records_use_case_.GetRecords({start, limit});
+}
+
+void Application::SaveRetirementPlayers() {
+    // Проверяем игроков на бездействие
+    for (auto player : players_.GetPlayers()) {
+        auto sleep_time = player->GetSleepTime();
+        if (sleep_time >= retirement_time_) {
+            auto name = *player->GetName();
+            auto play_time = player->GetPlayTime();
+            auto score = player->GetDog().GetScore();
+            db_use_cases_.AddPlayer({name, score, play_time});
+            players_.RemovePlayer(player->GetId());
+        }
+    }
+
 }
 
 

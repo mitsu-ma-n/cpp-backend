@@ -172,6 +172,18 @@ void GameSession::Tick(TimeType dt) noexcept {
     return nullptr;
 }
 
+void GameSession::RemoveDog(const Dog::Id& id) {
+    if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
+        auto index = it->second;
+        try {
+            dogs_.erase(dogs_.begin() + index);
+            dog_id_to_index_.erase(it);
+        } catch (...) {
+            throw std::runtime_error("Failed to remove dog");
+        }
+    }    
+}
+
 // Вспомогательные функции
 bool isPointOnRoad(Position pos, const Road& road) {
     auto ox = road.GetOxProjection();
@@ -257,12 +269,15 @@ void GameSession::ClearCollectedItems(const std::set<Item::Id>& collected_items)
 
 
 Position GameSession::MoveDog(Dog& dog, TimeType dt) noexcept {
+    // Время в игре прибавляем всегда
+    dog.AddPlayTime(dt.count()/1000.0);
     if( dog.GetSpeed() == Speed{0.0, 0.0} ) {
+        // Время простоя прибавляем при нулевой скорости
         dog.AddSleepTime(dt.count()/1000.0);
         return dog.GetPosition();
     }
 
-    // Скорость не ноль, значит собака в движении
+    // Скорость не ноль, значит собака в движении - сбрасываем время сна
     dog.ResetSleepTime();
 
     // Направление движения собаки

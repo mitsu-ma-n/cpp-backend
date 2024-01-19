@@ -1,11 +1,10 @@
 #pragma once
 
-#include "players.h"
-#include "postgres/postgres.h"
+#include "use_cases_impl.h"
 
 namespace app {
 
-struct RecorsInfo {
+struct RecordsParams {
     size_t start;
     size_t limit;
 };
@@ -17,19 +16,11 @@ struct RecordsResult {
 
 class RecordsUseCase {
 public:
-    RecordsUseCase(Players& players, postgres::Database& db) 
-        : players_{&players}
-        , db_{&db} {
-    }
-
-    // Получаем список карт
-    RecordsResult GetRecords(RecorsInfo info) {
-        return RecordsResult(db_->GetPlayers().GetRecords(info.start, info.limit));
-    }
+    RecordsUseCase(UseCasesImpl& db_use_cases);
+    RecordsResult GetRecords(RecordsParams params);
 
 private:
-    Players* players_;
-    postgres::Database* db_;
+    UseCasesImpl* db_use_cases_;
 };
 
 }  // namespace app

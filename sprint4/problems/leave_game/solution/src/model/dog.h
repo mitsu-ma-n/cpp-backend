@@ -110,19 +110,12 @@ public:
         sleep_time_ = 0.0;
     }
 
-    serializer::SerDog GetSerDog() const
-    {
-        serializer::SerDog serDog;
-        serDog.id = *id_;
-        serDog.name = *name_;
-        serDog.position = position_;
-        serDog.speed = speed_;
-        serDog.direction = direction_;
-        for (auto item : bag_) {
-            serDog.bag.push_back(item.GetSerItem());
-        }
-        serDog.score = score_;
-        return serDog;
+    void AddPlayTime(double time) {
+        play_time_ += time;
+    }
+
+    double GetPlayTime() const {
+        return play_time_;
     }
 
 private:
@@ -135,6 +128,7 @@ private:
     int score_ = 0;
 
     double sleep_time_{0.0};
+    double play_time_{0.0};
 
     static constexpr double width_ = 0.6;
 };

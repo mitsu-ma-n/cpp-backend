@@ -44,31 +44,12 @@ public:
         return session_;
     }
 
-    serializer::SerPlayer GetSerPlayer() const {
-        serializer::SerPlayer player;
-        player.id = *id_;
-        player.name = *name_;
-        return player;
-    }
-
     double GetPlayTime() const {
-        return play_time_;
-    }
-
-    void AddPlayTime(double time) {
-        play_time_ += time;
+        return dog_->GetPlayTime();
     }
 
     double GetSleepTime() const {
         return dog_->GetSleepTime();
-    }
-
-    bool HasRetirementState() const {
-        // Собака не активна и время её бездействия превышает время бездействия на карте
-        auto map = session_->GetMap();
-        auto dog_sleep_time = dog_->GetSleepTime();
-        //return !dog_->IsActive() && play_time_ - dog_sleep_time > RetirementTime();
-        return false;
     }
 
 private:
@@ -79,9 +60,6 @@ private:
     model::GameSession* session_;
     // Собака, которой управляет игрок
     model::Dog* dog_;
-
-    // Время в игре в секундах
-    double play_time_{0.0};
 };
 
 namespace detail {
@@ -182,22 +160,10 @@ public:
     void Add(std::unique_ptr<Player> player);
     // Возврщает указатель на игрока, который управляет собакой dog в игровой сессии session
     Player* FinByDog(const model::Dog& dog, const model::GameSession& session);
-
-    serializer::SerPlayers GetSerPlayers() const {
-        serializer::SerPlayers ser_players;
-        for (auto player : players_) {
-            ser_players.players.push_back(player->GetSerPlayer());
-        }
-        for (auto [name, index] : name_to_index_) {
-            ser_players.names.push_back(*name);
-            ser_players.indexes.push_back(index);
-        }
-        return ser_players;
-    }
-
-    const PlayersContainer& GetPlayers() const {
-        return players_;
-    }
+    // возвращает список игроков
+    const PlayersContainer& GetPlayers() const;
+    // Удаляет игрока с указанным идентификатором
+    void RemovePlayer(const Player::Id& player_id);
 
 private:
     // Пришлось перейти на multimap, потому что игроки с одинаковыми именами могут подключаться 

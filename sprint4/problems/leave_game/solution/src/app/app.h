@@ -10,6 +10,7 @@
 #include "tick_use_case.h"
 #include "add_player_use_case.h"
 #include "records_use_case.h"
+#include "use_cases_impl.h"
 
 #include "postgres/postgres.h"
 
@@ -37,7 +38,9 @@ public:
         , get_map_{game}
         , add_player_{game, tokens_, players_}
         , db_{ pqxx::connection{db_url} }
-        , records_use_case_{players_, db_}
+        , db_use_cases_{db_.GetPlayers()}
+        , records_use_case_{db_use_cases_}
+        , retirement_time_{game.GetDogRetirementTime()}
         {
     }
 
@@ -78,9 +81,14 @@ public:
     RecordsResult GetRecords(size_t start, size_t limit);
 
 private:
+    void SaveRetirementPlayers();
+
+private:
     Players players_;
     PlayerTokens tokens_;
     postgres::Database db_;
+    UseCasesImpl db_use_cases_;
+    double retirement_time_;
 
     JoinGameUseCase join_game_;
     ListPlayersUseCase list_players_;

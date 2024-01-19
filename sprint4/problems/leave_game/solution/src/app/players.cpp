@@ -58,8 +58,6 @@ void Players::Add(std::unique_ptr<Player> player) {
     players_[index] =std::move(player);
 }
 
-
-
 Player* Players::FinByDog(const model::Dog& dog, const model::GameSession& session) {
     const auto& name = dog.GetName();
 
@@ -74,6 +72,29 @@ Player* Players::FinByDog(const model::Dog& dog, const model::GameSession& sessi
 
     return nullptr;
 }
+
+const Players::PlayersContainer& Players::GetPlayers() const {
+    return players_;
+}
+
+void Players::RemovePlayer(const Player::Id& player_id) {
+    // Находим игрока
+    auto player_index = *player_id;
+    if ( player_index >= players_.size() ) {
+        throw std::invalid_argument("Player with id "s + std::to_string(player_index) + " not found"s);
+    }
+    auto player = players_[player_index];
+
+    if (player.get() != nullptr) {
+        // Сначала надо удалить собаку из сессии
+        auto session = player->GetSession();
+        session->RemoveDog(player->GetDog().GetId());
+    }
+
+    // Теперь можно удалить игрока
+    players_.erase(players_.begin() + player_index);
+}
+
 ///  ---  Players  ---  ///
 
 
