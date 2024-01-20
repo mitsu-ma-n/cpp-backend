@@ -19,13 +19,6 @@ namespace json_field {
     constexpr static char MAP_BUILDINGS[]    = "buildings";
     constexpr static char MAP_OFFICES[]      = "offices";
     constexpr static char MAP_LOOT_TYPES[]   = "lootTypes";
-    // LootTypes
-    // constexpr static char LOOT_TYPES_NAME[]     = "name";
-    // constexpr static char LOOT_TYPES_FILE[]     = "file";
-    // constexpr static char LOOT_TYPES_TYPE[]     = "type";
-    // constexpr static char LOOT_TYPES_ROTATION[] = "rotation";
-    // constexpr static char LOOT_TYPES_COLOR[]    = "color";
-    // constexpr static char LOOT_TYPES_SCALE[]    = "scale";
     // Dog
     constexpr static char DOG_POSITION[]  = "pos";
     constexpr static char DOG_SPEED[]     = "speed";

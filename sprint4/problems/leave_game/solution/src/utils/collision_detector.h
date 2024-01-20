@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 #include <optional>
 #include <variant>
@@ -69,13 +70,13 @@ public:
         return items_.size();
     }
     Item GetItem(size_t idx) const override {
-        return items_[idx];
+        return items_.at(idx);
     }
     size_t GatherersCount() const override {
         return gatherers_.size();
     }
     Gatherer GetGatherer(size_t idx) const override {
-        return gatherers_[idx];
+        return gatherers_.at(idx);
     }
 
 private:
@@ -90,7 +91,7 @@ public:
         if (l.gatherer_id != r.gatherer_id || l.item_id != r.item_id) 
             return false;
 
-        static const double eps = 1e-10;
+        static const double eps = std::numeric_limits<double>::epsilon();
 
         if (std::abs(l.sq_distance - r.sq_distance) > eps) {
             return false;
@@ -170,7 +171,7 @@ public:
         return rects_.size();
     }
     Rect GetRect(size_t idx) const override {
-        return rects_[idx];
+        return rects_.at(idx);
     }
     size_t GatherersCount() const override {
         return gatherers_.size();

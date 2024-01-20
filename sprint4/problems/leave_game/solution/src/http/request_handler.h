@@ -30,8 +30,6 @@ public:
                 auto handle = [self = shared_from_this(), send,
                                req = std::forward<decltype(req)>(req), version, keep_alive] {
                     try {
-                        // Этот assert не выстрелит, так как лямбда-функция будет выполняться внутри strand
-                        assert(self->api_handler_.GetStrand().running_in_this_thread());
                         return send(self->api_handler_.HandleApiRequest(req));
                     } catch (...) {
                         send(self->ReportServerError(version, keep_alive));

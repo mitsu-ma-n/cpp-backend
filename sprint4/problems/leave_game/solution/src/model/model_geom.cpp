@@ -1,9 +1,11 @@
 #include "model_geom.h"
 
+#include <limits>
+
 namespace model {
 
 bool operator==(Position a, Position b) {
-    const DynamicDimension eps = 1.e-14;
+    const DynamicDimension eps = std::numeric_limits<DynamicDimension>::epsilon();
     return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) < eps;
 }
 
@@ -16,7 +18,7 @@ Position operator+(Position a, Position b) {
 }
 
 bool operator==(Speed a, Speed b) {
-    const DynamicDimension eps = 1.e-14;
+    const DynamicDimension eps = std::numeric_limits<DynamicDimension>::epsilon();
     return (a.ux - b.ux) * (a.ux - b.ux) + (a.uy - b.uy) * (a.uy - b.uy) < eps;
 }
 

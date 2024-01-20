@@ -21,9 +21,7 @@ namespace logging = boost::log;
 
 // Настройка фильтров вывода сообщений логгера
 void InitBoostLogFilter() {
-//    logging::core::get()->set_filter(
-//        logging::trivial::severity >= logging::trivial::info
-//    );
+    // В релизной версии фильтры установлены по умолчанию
 }
 
 // tag_invoke должны быть определны в том же namespace, в котором определны классы,

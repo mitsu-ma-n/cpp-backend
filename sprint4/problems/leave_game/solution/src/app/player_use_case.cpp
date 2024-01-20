@@ -9,10 +9,10 @@ namespace app {
 bool PlayerAction::IsDirection() const {
     // Список допустимых направлений
     std::set<std::string> valid_directions = {
-        {(char)model::Direction::NORTH}, 
-        {(char)model::Direction::SOUTH}, 
-        {(char)model::Direction::EAST}, 
-        {(char)model::Direction::WEST}
+        {static_cast<char>(model::Direction::NORTH)}, 
+        {static_cast<char>(model::Direction::SOUTH)}, 
+        {static_cast<char>(model::Direction::EAST)}, 
+        {static_cast<char>(model::Direction::WEST)}
     };
     return valid_directions.find(move_) != valid_directions.end();
 }

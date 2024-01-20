@@ -43,7 +43,7 @@ public:
             boost::timer::cpu_times times = timer->elapsed();
 
             // Заполняем информацию об ответе. Обработка запроса к этому времени уже произведена
-            (*response_jobject)[json_field::RESPONSE_TIME] = times.wall / 1'000'000;   // наносекунды в миллисекунды
+            (*response_jobject)[json_field::RESPONSE_TIME] = static_cast<unsigned long>(times.wall / 1'000'000);   // наносекунды в миллисекунды
             (*response_jobject)[json_field::RESPONSE_CODE] = response.result_int();
             (*response_jobject)[json_field::RESPONSE_CONTENT_TYPE] = response[http::field::content_type];
 

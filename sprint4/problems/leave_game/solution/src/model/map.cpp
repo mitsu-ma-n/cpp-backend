@@ -20,28 +20,17 @@ void Map::AddOffice(const Office& office) {
 
 // Получение произвольной точки на дорогах карты
 model::Position Map::GetRandomPointOnMap() const {
-    // Выбираем случайную дорогу
-//    size_t road_index = utils::my_random::GetRandomIndex(0, roads.size()-1);
-// Временно для тестрования берём начальную точку первой дороги
+    // Выбираем дорогу
     size_t road_index = 0;
     const model::Road& road = roads_[road_index];
 
-    // Выбираем случайную точку на дороге
+    // Выбираем точку на дороге
     model::Point start = road.GetStart();
     model::Point end = road.GetEnd();
 
     model::Position res;
     res.x = start.x;
     res.y = start.y;
-/*
-    if ( road.IsHorizontal() ) {
-        res.y = start.y;
-        res.x = utils::my_random::GetRandomDouble(start.x, end.x);
-    } else {
-        res.x = start.x;
-        res.y = utils::my_random::GetRandomDouble(start.y, end.y);
-    }
-*/
     return res;
 }
 
