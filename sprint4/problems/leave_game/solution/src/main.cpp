@@ -129,20 +129,18 @@ int main(int argc, const char* argv[]) {
             return EXIT_SUCCESS;
         }
 
-        // 1. Загружаем карту из файла и построить модель игры
+        // Загружаем карту из файла и построить модель игры
         auto [game,extra_data] = json_loader::LoadGame(args->config_file);
 
-        // 2. Инициализируем io_context
+        // Инициализируем io_context
         const unsigned num_threads = std::thread::hardware_concurrency();
-//        const unsigned num_threads = 1u;  // Для отладки в одном потоке
-
         net::io_context ioc(num_threads);
 
         // strand для выполнения запросов к API
         auto api_strand = net::make_strand(ioc);
 
-        //const char* db_url = std::getenv("DB_URL");
-        const char* db_url = "postgres://postgres:debiloid@localhost:5432/test_db";
+        // Получаем URL для подключения к базе данных
+        const char* db_url = std::getenv("GAME_DB_URL");
         if (!db_url) {
             throw std::runtime_error("DB URL is not specified");
         }
@@ -150,8 +148,8 @@ int main(int argc, const char* argv[]) {
         // Объект Application содержит сценарии использования
         app::Application app(game, db_url);
 
+        // Объект StateSerializer содержит механизмы сериализации/десериализации состояния игры
         serialization::StateSerializer serializer(game, app);
-        //serialization::StateSerializer serializer(game, app);
 
         if (args->is_dt_set) {
             // Настраиваем вызов метода Application::ExecuteTick каждые args->dt миллисекунд внутри strand
@@ -177,7 +175,6 @@ int main(int argc, const char* argv[]) {
             if (args->is_save_state_period_set) {
                 // Лямбда-функция будет вызываться всякий раз, когда Application будет слать сигнал tick
                 // Функция перестанет вызываться после разрушения conn.
-                // TODO: убрать args из лямбды
                 conn = app.DoOnTick([total = 0ms, &serializer, &args](milliseconds delta) mutable {
                     serializer.Serialize(args->state_path);
                     total += delta;
@@ -186,7 +183,7 @@ int main(int argc, const char* argv[]) {
             }
         }
 
-        // 3. Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
+        // Добавляем асинхронный обработчик сигналов SIGINT и SIGTERM
         // Подписываемся на сигналы и при их получении завершаем работу сервера
         net::signal_set signals(ioc, SIGINT, SIGTERM);
         signals.async_wait([&ioc](const sys::error_code& ec, [[maybe_unused]] int signal_number) {
@@ -200,7 +197,7 @@ int main(int argc, const char* argv[]) {
         // Устанавливаем путь к статическим файлам
         fs::path base_path{std::string(args->static_path)};
 
-        // 4. Создаём обработчик HTTP-запросов и связываем его с моделью игры
+        // Создаём обработчик HTTP-запросов и связываем его с моделью игры
         auto handler = make_shared<http_handler::RequestHandler>(api_strand, app, base_path, extra_data);
 
         // endpoint нужен и известен только внутри логгера, поэтому тут он не нужен
@@ -209,7 +206,7 @@ int main(int argc, const char* argv[]) {
         } };
 
         const auto address = net::ip::make_address(server_params::ADRESS);
-        // 5. Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
+        // Запустить обработчик HTTP-запросов, делегируя их обработчику запросов
         http_server::ServeHttp(ioc, {address, server_params::PORT}, logging_handler);
 
         // Настраиваем логгер
@@ -227,10 +224,11 @@ int main(int argc, const char* argv[]) {
         BOOST_LOG_TRIVIAL(info) << boost::log::add_value(additional_data, boost::json::value(server_params_jobject))
                                 << server_params::START_MESSAGE;
 
-        // 6. Запускаем обработку асинхронных операций
+        // Запускаем обработку асинхронных операций
         RunWorkers(std::max(1u, num_threads), [&ioc] {
             ioc.run();
         });
+
         // В этой точке все асинхронные операции уже завершены и можно 
         // сохранить состояние сервера в файл
         if (args->is_state_path_set) {

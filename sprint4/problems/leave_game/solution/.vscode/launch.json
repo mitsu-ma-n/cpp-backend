@@ -105,11 +105,16 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/game_server",    // Обязательно прописать путь к программе
-            "args": ["--config-file", "./data/config.json", "--www-root", "./static", "--state-file", "./state.bin", "--save-state-period", "100"],
+            "args": ["--config-file", "./data/config.json", "--www-root", "./static", "--state-file", "./state.bin"],
             // --config-file ./data/config.json --www-root ./static --state-file ./state.bin --save-state-period 100
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [
+                {
+                    "name" : "GAME_DB_URL",
+                    "value" : "postgres://postgres:debiloid@localhost:5432/test_db"
+                }
+                ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [

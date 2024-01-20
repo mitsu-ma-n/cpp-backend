@@ -57,11 +57,15 @@ void Application::SaveRetirementPlayers() {
     for (auto player : players_.GetPlayers()) {
         auto sleep_time = player->GetSleepTime();
         if (sleep_time >= retirement_time_) {
+            // Сохраняем рекорд
             auto name = *player->GetName();
             auto play_time = player->GetPlayTime();
             auto score = player->GetDog().GetScore();
             db_use_cases_.AddPlayer({name, score, play_time});
+            // Удаляем игрока
             players_.RemovePlayer(player->GetId());
+            // Удаляем токен авторизации
+            tokens_.RemovePlayer(player.get());
         }
     }
 

@@ -16,7 +16,7 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
     const size_t index = dogs_.size();  // Получаем незанятый индекс
     // Здесь должна быть генерация уникального Id собаки. Пока берём просто индекс.
     // Пробуем добавить
-    if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
+    if (auto [it, inserted] = dog_id_to_index_.emplace(next_dog_index_, index); !inserted) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
         // Создаём на основе индекса и имени экземпляр собаки
@@ -27,13 +27,15 @@ Dog* GameSession::AddDog(Position pos, const Dog::Name& name) {
             throw;
         }
     }
+    ++next_dog_index_;
     return dogs_[index].get();
 }
 
 void GameSession::AddDog(const Dog& dog) {
-    const size_t index = *dog.GetId();  // Получаем сохранённый индекс
+    const size_t id = *dog.GetId();  // Получаем сохранённый индекс
+    const size_t index = dogs_.size();  // Получаем незанятый индекс
     // Пробуем добавить
-    if (auto [it, inserted] = dog_id_to_index_.emplace(index, index); !inserted) {
+    if (auto [it, inserted] = dog_id_to_index_.emplace(id, index); !inserted) {
         throw std::invalid_argument("Dog with id "s + std::to_string(index) + " already exists"s);
     } else {
         if ( index >= dogs_.size() ) {
@@ -41,12 +43,13 @@ void GameSession::AddDog(const Dog& dog) {
         }
         dogs_[index] = std::make_shared<Dog>(dog);
     }
+    ++next_dog_index_;
 }
 
-Item* GameSession::AddItem(Position pos, Item::Type& type) {
+void GameSession::AddItem(Position pos, Item::Type& type) {
     const size_t index = items_.size();  // Получаем незанятый индекс
     // Пробуем добавить
-    if (auto [it, inserted] = item_id_to_index_.emplace(index, index); !inserted) {
+    if (auto [it, inserted] = item_id_to_index_.emplace(next_item_index_, index); !inserted) {
         throw std::invalid_argument("Item with id "s + std::to_string(index) + " already exists"s);
     } else {
         // Создаём на основе индекса и имени экземпляр предмета
@@ -57,20 +60,22 @@ Item* GameSession::AddItem(Position pos, Item::Type& type) {
             throw;
         }
     }
-    return items_[index].get();
+    ++next_item_index_;
 }
 
-void GameSession::AddItem(const Item& item) {
-    const size_t index = *item.GetId();  // Получаем сохранённый индекс
+void GameSession::AddItem(std::shared_ptr<Item> item) {
+    const size_t id = *item->GetId();  // Получаем сохранённый индекс
+    const size_t index = items_.size();  // Получаем незанятый индекс
     // Пробуем добавить
-    if (auto [it, inserted] = item_id_to_index_.emplace(index, index); !inserted) {
+    if (auto [it, inserted] = item_id_to_index_.emplace(id, index); !inserted) {
         throw std::invalid_argument("Item with id "s + std::to_string(index) + " already exists"s);
     } else {
         if ( index >= items_.size() ) {
             items_.resize(index + 1);
         }
-        items_[index] = std::make_shared<Item>(item);
+        items_[index] = item;
     }
+    ++next_item_index_;
 }
 
 void GameSession::Tick(TimeType dt) noexcept {
@@ -144,7 +149,7 @@ void GameSession::Tick(TimeType dt) noexcept {
                     // Запоминаем, что предмет собран
                     collected_items.insert(collected_item_id);
                     // Убираем предмет в рюкзак (создаётся копия)
-                    dog->TakeItem(*item);
+                    dog->TakeItem(item);
                 }
             }
         }, event);
@@ -158,7 +163,6 @@ void GameSession::Tick(TimeType dt) noexcept {
     size_t n_dogs = dog_id_to_index_.size();
     unsigned n_new_items = loot_generator_->Generate(dt, n_items, n_dogs);
     for (unsigned i = 0; i < n_new_items; ++i) {
-        //
         Item::Type rand_type = std::rand() % map_->GetNLootTypes();
         Position pos = map_->GetRandomPointOnMap();
         AddItem(pos, rand_type);
@@ -175,13 +179,31 @@ void GameSession::Tick(TimeType dt) noexcept {
 void GameSession::RemoveDog(const Dog::Id& id) {
     if (auto it = dog_id_to_index_.find(id); it != dog_id_to_index_.end()) {
         auto index = it->second;
-        try {
-            dogs_.erase(dogs_.begin() + index);
-            dog_id_to_index_.erase(it);
-        } catch (...) {
-            throw std::runtime_error("Failed to remove dog");
+        // Удаляем id собаки из таблицы
+        dog_id_to_index_.erase(id);
+        if (!dog_id_to_index_.empty()) {   // Остались ещё собаки
+            // находим id последнего последней
+            auto last_dog_id = GetDogIdByIndex(dogs_.size() - 1);
+            // Перекладка требуется, если пёс не из конца списка
+            if (last_dog_id) {
+                // На это место удалённого пса кладём указатель на собаку из конца списка
+                dogs_[index] = dogs_.back();
+                // Заносим новый индекс перемещённого пса в таблицу
+                dog_id_to_index_[*last_dog_id] = index;
+            }
         }
+        // Удаляем указатель из конца списка
+        dogs_.pop_back();
     }    
+}
+
+std::optional<Dog::Id> GameSession::GetDogIdByIndex(size_t index) {
+    for ( auto [dog_id, dog_index] : dog_id_to_index_ ) {
+        if (dog_index == index) {
+            return dog_id;
+        }
+    }
+    return std::nullopt;
 }
 
 // Вспомогательные функции
@@ -246,20 +268,18 @@ void GameSession::ClearCollectedItems(const std::set<Item::Id>& collected_items)
     for ( auto item_id : collected_items ) {
         if (auto it = item_id_to_index_.find(item_id); it != item_id_to_index_.end()) {
             auto item_index = it->second;
-            // Освобождаем память, потому что копия предмета теперь в рюкзаке
-            // delete items_[item_index];
             // Удаляем id предмета из таблицы
             item_id_to_index_.erase(item_id);
             if (!item_id_to_index_.empty()) {   // Остались ещё предметы
                 // находим id последнего предмета в списке предметов
                 auto last_item_id = GetItemIdByIndex(items_.size() - 1);
-                if (!last_item_id) {
-                    throw std::runtime_error("GameSession::ClearCollectedItems: not found item id for last index in items list");
-                }
-                // На это место удалённого предмета кладём указатель на предмет из конца списка
-                items_[item_index] = items_.back();
-                // Заносим новый индекс перемещённого предмета в таблицу
-                item_id_to_index_[*last_item_id] = item_index;
+                // Перекладка требуется, если предмет не из конца списка
+                if (last_item_id) {
+                    // На это место удалённого предмета кладём указатель на предмет из конца списка
+                    items_[item_index] = items_.back();
+                    // Заносим новый индекс перемещённого предмета в таблицу
+                    item_id_to_index_[*last_item_id] = item_index;
+                } 
             }
             // Удаляем указатель из конца списка
             items_.pop_back();

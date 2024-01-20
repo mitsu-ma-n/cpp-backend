@@ -36,7 +36,7 @@ private:
 class GetStateResult {
 public:
     using Players = std::vector<StatePlayerInfo>;
-    using Items = std::vector<model::Item*>;
+    using Items = std::vector<model::Item>;
 
 public:
     Players players_;

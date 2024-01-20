@@ -23,7 +23,7 @@ GetStateResult GetStateUseCase::GetState(Token token) {
 
         // Для карты выдаём список лута на ней
         for ( auto item : session->GetItems() ) {
-            res.items_.push_back(item.get());
+            res.items_.push_back(*item);
         }
     } else {
         throw GetStateError{GetStateErrorReason::InvalidToken};

@@ -39,8 +39,8 @@ public:
     , value_{item.GetValue()} {
     };
 
-    [[nodiscard]] model::Item Restore() const {
-        return model::Item{id_, type_, position_, value_};
+    [[nodiscard]] std::shared_ptr<model::Item> Restore() const {
+        return std::make_shared<model::Item>(id_, type_, position_, value_);
     }
 
     template <typename Archive>
@@ -71,7 +71,7 @@ public:
     , direction_{dog.GetDirection()}
     , score_{dog.GetScore()} {
         for (const auto& item : dog.GetBag()) {
-            bag_content_.push_back(ItemRepr{item});
+            bag_content_.push_back(ItemRepr{*item});
         }
     }
 

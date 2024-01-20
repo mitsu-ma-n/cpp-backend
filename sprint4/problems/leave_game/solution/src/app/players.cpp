@@ -2,7 +2,9 @@
 #include "game_session.h"
 
 #include <boost/smart_ptr/make_shared_object.hpp>
-#include <iostream>
+#include <cstddef>
+#include <memory>
+#include <new>
 #include <stdexcept>
 
 namespace app {
@@ -31,26 +33,18 @@ Player& Players::Add(model::Dog* dog, model::GameSession& session) {
     auto index = players_.size();
     Player::Id id(index);
 
-    auto name = dog->GetName();
-
-    auto it = name_to_index_.emplace(name, index);
-
     try {
         // Добавляем игрока
         players_.emplace_back(std::make_shared<Player>(id, *dog, session));
         return *players_.back();
     } catch (...) {
-        // Не получилось. Откатываем изменения в name_to_index_
-        name_to_index_.erase(it);
-        throw;
+        throw std::bad_alloc{};
     }
 }
 
 void Players::Add(std::unique_ptr<Player> player) {
     auto name = model::Dog::Name(*player->GetName());
     auto index = *player->GetId(); 
-
-    auto it = name_to_index_.emplace(name, index);
 
     if ( index >= players_.size() ) {
         players_.resize(index + 1);
@@ -59,13 +53,8 @@ void Players::Add(std::unique_ptr<Player> player) {
 }
 
 Player* Players::FinByDog(const model::Dog& dog, const model::GameSession& session) {
-    const auto& name = dog.GetName();
-
-    // Ищем всех игроков с таким именем
-    for (auto [itr, rangeEnd] = name_to_index_.equal_range(name); itr != rangeEnd; ++itr) {
-        const auto& player = players_.at(itr->second);
-        // Выбираем того игрока, который подключен к заданной сессии
-        if ( player->GetSession() == &session ) {
+    for (const auto& player : players_) {
+        if ( &player->GetDog() == &dog && player->GetSession() == &session ) {
             return player.get();
         }
     }
@@ -79,20 +68,16 @@ const Players::PlayersContainer& Players::GetPlayers() const {
 
 void Players::RemovePlayer(const Player::Id& player_id) {
     // Находим игрока
-    auto player_index = *player_id;
-    if ( player_index >= players_.size() ) {
-        throw std::invalid_argument("Player with id "s + std::to_string(player_index) + " not found"s);
+    for (int i = 0; i < players_.size(); i++) {
+        auto player = players_[i];
+        if ( player->GetId() == player_id ) {
+            // Сначала удаляем его собаку
+            player->GetSession()->RemoveDog(player->GetDog().GetId());
+            // Удаляем игрока
+            players_[i] = players_.back();
+            players_.pop_back();
+        }
     }
-    auto player = players_[player_index];
-
-    if (player.get() != nullptr) {
-        // Сначала надо удалить собаку из сессии
-        auto session = player->GetSession();
-        session->RemoveDog(player->GetDog().GetId());
-    }
-
-    // Теперь можно удалить игрока
-    players_.erase(players_.begin() + player_index);
 }
 
 ///  ---  Players  ---  ///

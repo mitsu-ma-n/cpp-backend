@@ -5,6 +5,7 @@
 #include "item.h"
 #include "serializer.h"
 
+#include <memory>
 #include <optional>
 
 namespace model {
@@ -13,7 +14,7 @@ class Dog {
 public:
     using Id = util::Tagged<std::uint32_t, Dog>;
     using Name = util::Tagged<std::string, Dog>;
-    using Bag = std::vector<Item>;
+    using Bag = std::vector<std::shared_ptr<Item>>;
 
     Dog(Id id, Name name, Position position = {0.0, 0.0}, Speed speed = {0.0, 0.0}, Direction direction = Direction::NORTH ) noexcept
         : id_{std::move(id)}
@@ -67,7 +68,7 @@ public:
         return bag_.size();
     }
 
-    void TakeItem(const model::Item& item) {
+    void TakeItem(std::shared_ptr<Item> item) {
         bag_.push_back(item);
     }
 
@@ -89,7 +90,7 @@ public:
 
     void SaveBag() {
         for (auto item : bag_) {
-            score_ += item.GetValue();
+            score_ += item->GetValue();
         }
         ClearBag();
     }

@@ -189,16 +189,16 @@ void tag_invoke(json::value_from_tag, json::value& jv, Dog const& dog)
 void tag_invoke(json::value_from_tag, json::value& jv, Item const& item)
 {
     jv = {
-        {json_field::ITEM_ID, json::value_from(*item.GetId())},
-        {json_field::ITEM_TYPE, json::value_from(item.GetType())}
+        {json_field::ITEM_TYPE, json::value_from(item.GetType())},
+        {json_field::ITEM_POSITION, json::value_from(item.GetPosition())}
     };
 }
 
-void tag_invoke(json::value_from_tag, json::value& jv, Item* const& item)
+void tag_invoke(json::value_from_tag, json::value& jv, std::shared_ptr<Item> const& item)
 {
     jv = {
-        {json_field::ITEM_TYPE, json::value_from(item->GetType())},
-        {json_field::ITEM_POSITION, json::value_from(item->GetPosition())}
+        {json_field::ITEM_ID, json::value_from(*item->GetId())},
+        {json_field::ITEM_TYPE, json::value_from(item->GetType())}
     };
 }
 
@@ -385,7 +385,7 @@ void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, app::GetSta
 
     json::object object_items_info;   // Объект информации об игроках
     for (const auto& item_info : state_result.items_) {
-        object_items_info[item_info->GetIdAsString()] = json::value_from(item_info);
+        object_items_info[item_info.GetIdAsString()] = json::value_from(item_info);
     }
 
     object_state[json_field::GET_STATE_LOOT] = object_items_info;

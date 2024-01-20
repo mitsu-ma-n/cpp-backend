@@ -4,6 +4,7 @@
 #include "dog.h"
 #include "loot_generator.h"
 
+#include <atomic>
 #include <set>
 #include <memory>
 
@@ -26,8 +27,8 @@ public:
         return dogs_;
     }
 
-    Item* AddItem(Position pos, Item::Type& type);
-    void AddItem(const Item& item);
+    void AddItem(Position pos, Item::Type& type);
+    void AddItem(std::shared_ptr<Item> item);
 
     const Items& GetItems() const noexcept {
         return items_;
@@ -44,6 +45,7 @@ public:
 
 private:
     std::optional<Item::Id> GetItemIdByIndex(size_t index);
+    std::optional<Dog::Id> GetDogIdByIndex(size_t index);
     void ClearCollectedItems(const std::set<Item::Id>& collected_items);
     Position MoveDog(Dog& dog, TimeType dt) noexcept;
 
@@ -57,7 +59,9 @@ private:
     Items items_;
     const Map* map_;
     DogIdToIndex dog_id_to_index_;
+    std::atomic<size_t> next_dog_index_{0};
     ItemIdToIndex item_id_to_index_;
+    std::atomic<size_t> next_item_index_{0};
 
     loot_gen::LootGenerator* loot_generator_;
 };

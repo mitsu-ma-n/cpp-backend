@@ -114,7 +114,16 @@ public:
     void AddPlayer(Player* player, Token token) {
         token_to_player[token] = player;
     }
-    // Возвращет балицу игроков в виде id - Token
+    // Удаляет игрока из таблицы
+    void RemovePlayer(Player* player) {
+        for (auto it = token_to_player.begin(); it != token_to_player.end(); ++it) {
+            if (it->second == player) {
+                token_to_player.erase(it);
+                break;
+            }
+        }
+    }
+    // Возвращет таблицу игроков в виде id - Token
     PlayersIdsToTokens GetPlayersTokens() const {
         std::unordered_map<Player::Id, Token, IdHasher> player_id_to_token;
         for (const auto& [token, player] : token_to_player) {
@@ -171,7 +180,6 @@ private:
     using NameToIndex = std::multimap<model::Dog::Name, size_t>;
 
     PlayersContainer players_;
-    NameToIndex name_to_index_;
 };
 
 }  // namespace app
