@@ -23,6 +23,8 @@
 #include "app.h"
 #include "ticker.h"
 
+#include "state_serialization.h"
+
 using namespace std::literals;
 using milliseconds = std::chrono::milliseconds;
 
@@ -96,6 +98,10 @@ struct Args {
         args.is_state_path_set = true;
     }
 
+    if (vm.contains("save-state-period"s)) {
+        args.is_save_state_period_set = true;
+    }
+
     // С опциями программы всё в порядке, возвращаем структуру args
     return args;
 }
@@ -138,6 +144,8 @@ int main(int argc, const char* argv[]) {
         // Объект Application содержит сценарии использования
         app::Application app(game);
 
+        serialization::StateSerializer serializer(game, app);
+
         if (args->is_dt_set) {
             // Настраиваем вызов метода Application::ExecuteTick каждые args->dt миллисекунд внутри strand
             auto ticker = std::make_shared<utils::Ticker>(api_strand, std::chrono::milliseconds(args->dt),
@@ -149,18 +157,23 @@ int main(int argc, const char* argv[]) {
         sig::scoped_connection conn;
         if (args->is_state_path_set) {
             // Пробуем азгрузить состояние игры из файла
-            if (true) {
-
-            } else { // Не получилось - выходим с ошибкой
-
+            if (std::filesystem::exists(args->state_path)) {
+                try {
+                    serializer.Deserialize(args->state_path);
+                } catch (const std::exception& ex) {
+                    std::cerr << ex.what() << std::endl;
+                    return EXIT_FAILURE;
+                }
             }
 
-            // Если получилось и задано сохранение состояния по времени, то настраиваем обработчик
+            // Если задано сохранение состояния по времени, то настраиваем обработчик
             if (args->is_save_state_period_set) {
                 // Лямбда-функция будет вызываться всякий раз, когда Application будет слать сигнал tick
                 // Функция перестанет вызываться после разрушения conn.
-                conn = app.DoOnTick([total = 0ms](milliseconds delta) mutable {
+                // TODO: убрать args из лямбды
+                conn = app.DoOnTick([total = 0ms, &serializer, &args](milliseconds delta) mutable {
                     // TODO: Здесь сохраняем состояние игры в файл
+                    serializer.Serialize(args->state_path);
                     total += delta;
                     std::cout << "Tick! Delta: " << delta.count() << "ms, Total: " << total.count() << "ms" << std::endl;
                 });
@@ -215,7 +228,7 @@ int main(int argc, const char* argv[]) {
         // В этой точке все асинхронные операции уже завершены и можно 
         // сохранить состояние сервера в файл
         if (args->is_state_path_set) {
-            // TODO: Здесь сохраняем состояние игры в файл
+            serializer.Serialize(args->state_path);
         }
     } catch (const std::exception& ex) {
         BOOST_LOG_TRIVIAL(error) << boost::log::add_value(additional_data, boost::json::value({json_field::ERROR_CODE, EXIT_FAILURE}))

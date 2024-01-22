@@ -1,5 +1,8 @@
 #include "players.h"
+#include "game_session.h"
 
+#include <boost/smart_ptr/make_shared_object.hpp>
+#include <iostream>
 #include <stdexcept>
 
 namespace app {
@@ -30,28 +33,43 @@ Player& Players::Add(model::Dog* dog, model::GameSession& session) {
 
     auto name = dog->GetName();
 
-    if (auto [it, inserted] = name_to_index_.emplace(name, index); !inserted) {
-        // Игрок с таким именем уже есть
-        throw std::invalid_argument("Name "s + *name + " already exists"s);
-    } else {
-        Player* new_player = new Player(id, *dog, session);
-        try {
-            // Добавляем игрока
-            players_.emplace_back(new_player);
-            return *players_.back();
-        } catch (...) {
-            // Не получилось. Откатываем изменения в name_to_index_
-            name_to_index_.erase(it);
-            delete new_player;
-            throw;
-        }
+    auto it = name_to_index_.emplace(name, index);
+
+    try {
+        // Добавляем игрока
+        players_.emplace_back(std::make_shared<Player>(id, *dog, session));
+        return *players_.back();
+    } catch (...) {
+        // Не получилось. Откатываем изменения в name_to_index_
+        name_to_index_.erase(it);
+        throw;
     }
 }
 
-Player* Players::FinByDog(model::Dog dog) {
-    auto name = dog.GetName();
-    if (auto it = name_to_index_.find(name); it != name_to_index_.end()) {
-        return players_.at(it->second);
+void Players::Add(std::unique_ptr<Player> player) {
+    auto name = model::Dog::Name(*player->GetName());
+    auto index = *player->GetId(); 
+
+    auto it = name_to_index_.emplace(name, index);
+
+    if ( index >= players_.size() ) {
+        players_.resize(index + 1);
+    }
+    players_[index] =std::move(player);
+}
+
+
+
+Player* Players::FinByDog(const model::Dog& dog, const model::GameSession& session) {
+    const auto& name = dog.GetName();
+
+    // Ищем всех игроков с таким именем
+    for (auto [itr, rangeEnd] = name_to_index_.equal_range(name); itr != rangeEnd; ++itr) {
+        const auto& player = players_.at(itr->second);
+        // Выбираем того игрока, который подключен к заданной сессии
+        if ( player->GetSession() == &session ) {
+            return player.get();
+        }
     }
 
     return nullptr;

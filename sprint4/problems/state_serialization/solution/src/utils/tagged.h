@@ -40,6 +40,9 @@ public:
         : value_(v) {
     }
 
+    // Add a default constructor
+    Tagged() = default;
+    
     const Value& operator*() const {
         return value_;
     }
